@@ -1,7 +1,7 @@
 // options {
 //   IGNORE_CASE = false;
 //   COMMON_TOKEN_ACTION = false;
-//   ...
+//
 // }
 
 PARSER_BEGIN(adac)
@@ -9,9 +9,9 @@ package traductor;
 
 public class adac {
 	private static void errorLexico(TokenMgrError e) {
-	   //TODO: Apaño un poco cutre -- > mejorar
+	   //TODO: Apaï¿½o un poco cutre -- > mejorar
 		String m [] = e.getMessage().split(" ");
-    	System.err.println("ERROR LÉXICO (" + m [4] + m [6].substring(0, m [6].length() - 1) + "): símbolo no reconocido: " + m [m.length - 5]);
+    	System.err.println("ERROR Lï¿½XICO (" + m [4] + m [6].substring(0, m [6].length() - 1) + "): sï¿½mbolo no reconocido: " + m [m.length - 5]);
 	 }
   
     public static void main(String[] args) {
@@ -19,7 +19,7 @@ public class adac {
     	try {
 	    	if(args.length == 0) { //entrada desde stdin
 				parser = new adac(System.in);
-				System.out.println("Leyendo de la entrada estándar...");
+				System.out.println("Leyendo de la entrada estï¿½ndar...");
 			}
 			else { //entrada desde fichero en args[0]
 	            parser = new adac(new java.io.FileInputStream(args[0])); 
@@ -124,7 +124,9 @@ TOKEN : /*Identificadores*/
 {
 	< #DIGITO : [ "0"-"9" ] >
 | 	< #LETRA : [ "a"-"z", "A" -"Z"] >
-| 	< tIDENTIFICADOR: < LETRA > | (< LETRA > | "_")(< LETRA >|"_"| < DIGITO >)*( < LETRA >| < DIGITO >) > //TODO: punto 2.4 guion P1
+|   < #BARRA_POR_DELANTE : "_"< LETRA > | "_"< DIGITO > >
+                        //[a-z,A-Z]([a-z,A-Z]|_[a-z,A-Z]|_[0-9]|[0-9])*_?|_
+| 	< tIDENTIFICADOR: (< LETRA >(< LETRA > | < BARRA_POR_DELANTE > | < DIGITO >)*("_")?) | "_" >
 
   
 }
