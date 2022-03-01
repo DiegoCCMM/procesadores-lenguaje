@@ -1,0 +1,212 @@
+// options {
+//   IGNORE_CASE = false;
+//   COMMON_TOKEN_ACTION = false;
+//   ...
+// }
+
+PARSER_BEGIN(adac)
+package traductor;
+
+public class adac {
+	private static void errorLexico(TokenMgrError e) {
+	   //TODO: Apaño un poco cutre -- > mejorar
+		String m [] = e.getMessage().split(" ");
+    	System.err.println("ERROR LÉXICO (" + m [4] + m [6].substring(0, m [6].length() - 1) + "): símbolo no reconocido: " + m [m.length - 5]);
+	 }
+  
+    public static void main(String[] args) {
+    	adac parser;
+    	try {
+	    	if(args.length == 0) { //entrada desde stdin
+				parser = new adac(System.in);
+				System.out.println("Leyendo de la entrada estándar...");
+			}
+			else { //entrada desde fichero en args[0]
+	            parser = new adac(new java.io.FileInputStream(args[0])); 
+			}
+			parser.S(); //invoca simbolo inicial de la gramÃ¡tica
+		}
+		catch (java.io.FileNotFoundException e) {
+			System.err.println ("Fichero " + args[0] + " no encontrado.");
+		}
+		catch (TokenMgrError e) {
+        	//System.err.println("LEX_ERROR: " + e.getMessage());
+        	errorLexico(e);
+        }
+        catch (ParseException e) {
+        	System.err.println("SINT_ERROR: " + e.getMessage());
+        } 
+    }
+}
+PARSER_END(adac)
+
+TOKEN_MGR_DECLS: {
+  
+static void infoLexico(Token t,String nombre) {
+	System.out.println("("+ t.beginLine+","+t.beginColumn+"):" + nombre +"\t\""+ t.image+"\"");
+}
+}
+
+//TODO: mirar commonTokenAction
+
+SKIP :
+{
+ "--" : COMMENT
+|  " "
+| "\r"
+| "\t"
+| "\n"
+}
+
+<COMMENT> SKIP : {
+  "\n" : DEFAULT
+}
+<COMMENT> MORE : {
+	<~[]>
+}
+
+TOKEN : /* Operadores */
+{
+    <tAND : "and"> 
+  | <tOR : "or"> 
+  | <tNOT : "not"> 
+  | <tMOD : "mod"> 
+  | <tDIV : "div"> 
+  | <tMAYOR : ">"> 
+  | <tMENOR : "<"> 
+  | <tIGUAL : "="> 
+  | <tMAI : ">="> 
+  | <tMEI : "<="> 
+  | <tNI : "<>"> 
+  | <tOPAS : ":=">
+  | <tSUMA : "+"> 
+  | <tRESTA : "-"> 
+  | <tMUL : "*"> 
+}
+
+TOKEN : /* Palabras reservadas */
+{
+	<tPROCEDURE : "procedure">
+	| <TFUNCTION : "function">
+	| <tRETURN : "return">
+	| <tVAR : "var">
+	| <tREF : "ref">
+	| <tIS : "is">
+	| <tBEGIN : "begin">
+	{
+ 			infoLexico(matchedToken,"begin");
+ 	}
+  	| <tEND : "end"> 
+  	| <tIF : "if">
+  	| <tTHEN : "then">
+  	| <tELSE : "else">
+  	| <tWHILE: "while" >
+  	| <tPUT_L : "put_line">
+  	| <tPUT : "put">
+  	| <tGET : "get">
+  	| <tINT : "integer"> 
+  	| <tBOOL : "boolean">
+  	{
+ 			infoLexico(adac.getToken(0),"bool");
+ 	}
+  	| <tCHAR : "character">
+  	{
+ 			infoLexico(adac.getToken(0),"char");
+ 	}
+  	| <tTRUE : "true"> 
+  	| <tFALSE : "false"> 
+  	| <tINT2CHAR : "int2char">
+
+}
+
+
+TOKEN : /*Identificadores*/
+{
+	< #DIGITO : [ "0"-"9" ] >
+| 	< #LETRA : [ "a"-"z", "A" -"Z"] >
+| 	< tIDENTIFICADOR: < LETRA > | (< LETRA > | "_")(< LETRA >|"_"| < DIGITO >)*( < LETRA >| < DIGITO >) > //TODO: punto 2.4 guion P1
+
+  
+}
+
+TOKEN : /* Valores */
+{
+
+   < tVALORENTERO : (< DIGITO >)+ >
+|   < tVALORBOOLEANO : ("true"| "false") > 
+| 	< tVALORCHAR : ("\"")~["\""]("\"") >
+| 	< tVALORCADENA : ("\"")~["\""](~["\""])+("\"") >
+}
+
+
+TOKEN : /*Separadores*/
+{
+  < tPC : ";" >
+| < tCOMA : "," >
+| < tAP: "(" > //abre parentesis
+| < tCP: ")" > //cierra parentesis
+| < tAV: "[" > //abre vector
+| < tCV: "]" > //cierra vector
+}
+
+
+
+
+
+void S () : 
+{
+
+}
+{
+  (
+    < tAND >
+  | < tOR >
+  | < tNOT >
+  | < tMOD >
+  | < tDIV >
+  | < tMAYOR >
+  | < tMENOR >
+  | < tIGUAL >
+  | < tMAI >
+  | < tMEI >
+  | < tNI >
+  | < tOPAS >
+  | < tSUMA >
+  | < tRESTA >
+  | < tMUL >
+  | < tPROCEDURE >
+  | < TFUNCTION >
+  | < tRETURN >
+  | < tVAR >
+  | < tREF >
+  | < tIS >
+  | < tBEGIN >
+  | < tEND >
+  | < tIF >
+  | < tTHEN >
+  | < tELSE >
+  | < tWHILE >
+  | < tPUT_L >
+  | < tPUT >
+  | < tGET >
+  | < tINT >
+  | < tBOOL >
+  | < tCHAR >
+  | < tTRUE >
+  | < tFALSE >
+  | < tINT2CHAR >
+  | < tIDENTIFICADOR >
+  | < tVALORENTERO >
+  | < tVALORBOOLEANO >
+  | < tVALORCHAR >
+  | < tVALORCADENA >
+  | < tPC >
+  | < tCOMA >
+  | < tAP > 
+  | < tCP > 
+  | < tAV > 
+  | < tCV > 
+
+	)+
+	< EOF >
+}
