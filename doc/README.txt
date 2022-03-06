@@ -1,5 +1,6 @@
 
 Práctica 1: Construcción de un analizador léxico para "adac"
-Blah, blah, blah
 
-AÑADIR LA INFORMACIÓN RELEVANTE
+AUTORES
+Diego Caballé Casanova 738712
+Alicia Yasmina Albero Escudero	721288
