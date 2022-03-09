@@ -8,11 +8,9 @@ PARSER_BEGIN(adac)
 package traductor;
 
 public class adac {
-	private static void errorLexico(TokenMgrError e) {
-	   //TODO: Apaï¿½o un poco cutre -- > mejorar
-		String m [] = e.getMessage().split(" ");
-    	System.err.println("ERROR Lï¿½XICO (" + m [4] + m [6].substring(0, m [6].length() - 1) + "): sï¿½mbolo no reconocido: " + m [m.length - 5]);
-	 }
+	static void errorLexico(Token t) {
+		System.out.println("ERROR LÉXICO: ("+ t.beginLine+","+t.beginColumn+"): símbolo no reconocido <"+ t.image+">");
+	}
   
     public static void main(String[] args) {
     	adac parser;
@@ -31,7 +29,7 @@ public class adac {
 		}
 		catch (TokenMgrError e) {
         	//System.err.println("LEX_ERROR: " + e.getMessage());
-        	errorLexico(e);
+        	errorLexico(token);
         }
         catch (ParseException e) {
         	System.err.println("SINT_ERROR: " + e.getMessage());
@@ -43,8 +41,10 @@ PARSER_END(adac)
 TOKEN_MGR_DECLS: {
   
 static void infoLexico(Token t,String nombre) {
-	System.out.println("("+ t.beginLine+","+t.beginColumn+"):" + nombre +"\t\""+ t.image+"\"");
+	System.out.println("("+ t.beginLine+","+t.beginColumn+"): " + nombre +" \""+ t.image+"\"");
 }
+
+
 }
 
 //TODO: mirar commonTokenAction
@@ -67,55 +67,46 @@ SKIP :
 
 TOKEN : /* Operadores */
 {
-    <tAND : "and"> 
-  | <tOR : "or"> 
-  | <tNOT : "not"> 
-  | <tMOD : "mod"> 
-  | <tDIV : "div"> 
-  | <tMAYOR : ">"> 
-  | <tMENOR : "<"> 
-  | <tIGUAL : "="> 
-  | <tMAI : ">="> 
-  | <tMEI : "<="> 
-  | <tNI : "<>"> 
-  | <tOPAS : ":=">
-  | <tSUMA : "+"> 
-  | <tRESTA : "-"> 
-  | <tMUL : "*"> 
+    <tAND : "and">         {infoLexico(matchedToken,"operador and");} 
+  | <tOR : "or">     {infoLexico(matchedToken,"operador or");} 
+  | <tNOT : "not">     {infoLexico(matchedToken,"operador not");} 
+  | <tMOD : "mod">     {infoLexico(matchedToken,"operador mod");} 
+  | <tDIV : "div">     {infoLexico(matchedToken,"operador division");} 
+  | <tMAYOR : ">">     {infoLexico(matchedToken,"operador mayor");} 
+  | <tMENOR : "<">     {infoLexico(matchedToken,"operador menor");} 
+  | <tIGUAL : "=">     {infoLexico(matchedToken,"operador igual");} 
+  | <tMAI : ">=">     {infoLexico(matchedToken,"operador mayor o igual");} 
+  | <tMEI : "<=">     {infoLexico(matchedToken,"operadormenor o igual");} 
+  | <tNI : "<>">     {infoLexico(matchedToken,"operador distinto");} 
+  | <tOPAS : ":=">       {infoLexico(matchedToken,"operador asignacion");}
+  | <tSUMA : "+">     {infoLexico(matchedToken,"operador suma");} 
+  | <tRESTA : "-">     {infoLexico(matchedToken,"operador resta");} 
+  | <tMUL : "*">     {infoLexico(matchedToken,"operador multiplicacion");} 
 }
 
 TOKEN : /* Palabras reservadas */
 {
-	<tPROCEDURE : "procedure">
-	| <TFUNCTION : "function">
-	| <tRETURN : "return">
-	| <tVAR : "var">
-	| <tREF : "ref">
-	| <tIS : "is">
-	| <tBEGIN : "begin">
-	{
- 			infoLexico(matchedToken,"begin");
- 	}
-  	| <tEND : "end"> 
-  	| <tIF : "if">
-  	| <tTHEN : "then">
-  	| <tELSE : "else">
-  	| <tWHILE: "while" >
-  	| <tPUT_L : "put_line">
-  	| <tPUT : "put">
-  	| <tGET : "get">
-  	| <tINT : "integer"> 
-  	| <tBOOL : "boolean">
-  	{
- 			infoLexico(adac.getToken(0),"bool");
- 	}
-  	| <tCHAR : "character">
-  	{
- 			infoLexico(adac.getToken(0),"char");
- 	}
-  	| <tTRUE : "true"> 
-  	| <tFALSE : "false"> 
-  	| <tINT2CHAR : "int2char">
+<tPROCEDURE : "procedure">      {infoLexico(matchedToken,"procedure");}
+    | <TFUNCTION : "function">  {infoLexico(matchedToken,"function");}
+    | <tRETURN : "return">      {infoLexico(matchedToken,"return");}
+    | <tVAR : "var">            {infoLexico(matchedToken,"variable");}
+    | <tREF : "ref">            {infoLexico(matchedToken,"referencia");}
+    | <tIS : "is">              {infoLexico(matchedToken,"is");}
+    | <tBEGIN : "begin">        {infoLexico(matchedToken,"begin");}    
+    | <tEND : "end">            {infoLexico(matchedToken,"end");} 
+    | <tIF : "if">              {infoLexico(matchedToken,"if");}
+    | <tTHEN : "then">          {infoLexico(matchedToken,"then");}
+    | <tELSE : "else">          {infoLexico(matchedToken,"else");}
+    | <tWHILE: "while" >        {infoLexico(matchedToken,"while");}
+    | <tPUT_L : "put_line">     {infoLexico(matchedToken,"put_line");}
+  	| <tPUT : "put">			{infoLexico(matchedToken,"put");}
+  	| <tGET : "get">			{infoLexico(matchedToken,"get");}
+  	| <tINT : "integer">		{infoLexico(matchedToken,"entero");}
+  	| <tBOOL : "boolean"> 		{infoLexico(matchedToken,"booleano"); }
+  	| <tCHAR : "character"> 	{infoLexico(matchedToken,"caracter");}
+  	| <tTRUE : "true"> 			{infoLexico(matchedToken,"true");}
+  	| <tFALSE : "false"> 		{infoLexico(matchedToken,"false");}
+  	| <tINT2CHAR : "int2char">	{infoLexico(matchedToken,"conversion entero-caracter");}
 
 }
 
@@ -126,7 +117,7 @@ TOKEN : /*Identificadores*/
 | 	< #LETRA : [ "a"-"z", "A" -"Z"] >
 |   < #BARRA_POR_DELANTE : "_"< LETRA > | "_"< DIGITO > >
                         //[a-z,A-Z]([a-z,A-Z]|_[a-z,A-Z]|_[0-9]|[0-9])*_?|_
-| 	< tIDENTIFICADOR: (< LETRA >(< LETRA > | < BARRA_POR_DELANTE > | < DIGITO >)*("_")?) | "_" >
+| 	< tIDENTIFICADOR: (< LETRA >(< LETRA > | < BARRA_POR_DELANTE > | < DIGITO >)*("_")?) | "_" > 	{infoLexico(matchedToken,"identificador");}
 
   
 }
@@ -135,9 +126,9 @@ TOKEN : /* Valores */
 {
 
    < tVALORENTERO : (< DIGITO >)+ >
-|   < tVALORBOOLEANO : ("true"| "false") > 
-| 	< tVALORCHAR : ("\"")~["\""]("\"") >
-| 	< tVALORCADENA : ("\"")~["\""](~["\""])+("\"") >
+|   < tVALORBOOLEANO : ("true"| "false") >				{infoLexico(matchedToken,"valor booleano");}
+| 	< tVALORCHAR : ("\"")~["\""]("\"") >				{infoLexico(matchedToken,"valor caracter");}
+| 	< tVALORCADENA : ("\"")~["\""](~["\""])+("\"") >	{infoLexico(matchedToken,"valor cadena");}
 }
 
 
@@ -160,6 +151,7 @@ void S () :
 
 }
 {
+  
   (
     < tAND >
   | < tOR >
@@ -212,3 +204,5 @@ void S () :
 	)+
 	< EOF >
 }
+
+
