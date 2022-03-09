@@ -1,7 +1,7 @@
  options {
    IGNORE_CASE = true;
    COMMON_TOKEN_ACTION = false;
-
+   DEBUG_PARSER = false;
 }
 
 PARSER_BEGIN(adac)
