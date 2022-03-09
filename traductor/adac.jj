@@ -1,15 +1,18 @@
-// options {
-//   IGNORE_CASE = false;
-//   COMMON_TOKEN_ACTION = false;
-//
-// }
+ options {
+   IGNORE_CASE = true;
+   COMMON_TOKEN_ACTION = false;
+
+}
 
 PARSER_BEGIN(adac)
 package traductor;
 
 public class adac {
 	static void errorLexico(Token t) {
-		System.out.println("ERROR LÉXICO: ("+ t.beginLine+","+t.beginColumn+"): símbolo no reconocido <"+ t.image+">");
+		System.out.println("ERROR LÃ‰XICO (" + SimpleCharStream.getBeginLine() +
+                ", " + SimpleCharStream.getBeginColumn() + "): sÃ­mbolo no reconocido: <" +
+                SimpleCharStream.GetImage().charAt(adacTokenManager.curLexState) + ">");
+
 	}
   
     public static void main(String[] args) {
@@ -17,7 +20,7 @@ public class adac {
     	try {
 	    	if(args.length == 0) { //entrada desde stdin
 				parser = new adac(System.in);
-				System.out.println("Leyendo de la entrada estï¿½ndar...");
+				System.out.println("Leyendo de la entrada estandar...");
 			}
 			else { //entrada desde fichero en args[0]
 	            parser = new adac(new java.io.FileInputStream(args[0])); 
@@ -28,7 +31,6 @@ public class adac {
 			System.err.println ("Fichero " + args[0] + " no encontrado.");
 		}
 		catch (TokenMgrError e) {
-        	//System.err.println("LEX_ERROR: " + e.getMessage());
         	errorLexico(token);
         }
         catch (ParseException e) {
@@ -47,7 +49,6 @@ static void infoLexico(Token t,String nombre) {
 
 }
 
-//TODO: mirar commonTokenAction
 
 SKIP :
 {
@@ -67,21 +68,21 @@ SKIP :
 
 TOKEN : /* Operadores */
 {
-    <tAND : "and">         {infoLexico(matchedToken,"operador and");} 
-  | <tOR : "or">     {infoLexico(matchedToken,"operador or");} 
-  | <tNOT : "not">     {infoLexico(matchedToken,"operador not");} 
-  | <tMOD : "mod">     {infoLexico(matchedToken,"operador mod");} 
-  | <tDIV : "div">     {infoLexico(matchedToken,"operador division");} 
-  | <tMAYOR : ">">     {infoLexico(matchedToken,"operador mayor");} 
-  | <tMENOR : "<">     {infoLexico(matchedToken,"operador menor");} 
-  | <tIGUAL : "=">     {infoLexico(matchedToken,"operador igual");} 
-  | <tMAI : ">=">     {infoLexico(matchedToken,"operador mayor o igual");} 
-  | <tMEI : "<=">     {infoLexico(matchedToken,"operadormenor o igual");} 
-  | <tNI : "<>">     {infoLexico(matchedToken,"operador distinto");} 
+    <tAND : "and">         {infoLexico(matchedToken,"operador and");}
+  | <tOR : "or">     {infoLexico(matchedToken,"operador or");}
+  | <tNOT : "not">     {infoLexico(matchedToken,"operador not");}
+  | <tMOD : "mod">     {infoLexico(matchedToken,"operador mod");}
+  | <tDIV : "div">     {infoLexico(matchedToken,"operador division");}
+  | <tMAYOR : ">">     {infoLexico(matchedToken,"operador mayor");}
+  | <tMENOR : "<">     {infoLexico(matchedToken,"operador menor");}
+  | <tIGUAL : "=">     {infoLexico(matchedToken,"operador igual");}
+  | <tMAI : ">=">     {infoLexico(matchedToken,"operador mayor o igual");}
+  | <tMEI : "<=">     {infoLexico(matchedToken,"operadormenor o igual");}
+  | <tNI : "<>">     {infoLexico(matchedToken,"operador distinto");}
   | <tOPAS : ":=">       {infoLexico(matchedToken,"operador asignacion");}
-  | <tSUMA : "+">     {infoLexico(matchedToken,"operador suma");} 
-  | <tRESTA : "-">     {infoLexico(matchedToken,"operador resta");} 
-  | <tMUL : "*">     {infoLexico(matchedToken,"operador multiplicacion");} 
+  | <tSUMA : "+">     {infoLexico(matchedToken,"operador suma");}
+  | <tRESTA : "-">     {infoLexico(matchedToken,"operador resta");}
+  | <tMUL : "*">     {infoLexico(matchedToken,"operador multiplicacion");}
 }
 
 TOKEN : /* Palabras reservadas */
@@ -92,8 +93,8 @@ TOKEN : /* Palabras reservadas */
     | <tVAR : "var">            {infoLexico(matchedToken,"variable");}
     | <tREF : "ref">            {infoLexico(matchedToken,"referencia");}
     | <tIS : "is">              {infoLexico(matchedToken,"is");}
-    | <tBEGIN : "begin">        {infoLexico(matchedToken,"begin");}    
-    | <tEND : "end">            {infoLexico(matchedToken,"end");} 
+    | <tBEGIN : "begin">        {infoLexico(matchedToken,"begin");}
+    | <tEND : "end">            {infoLexico(matchedToken,"end");}
     | <tIF : "if">              {infoLexico(matchedToken,"if");}
     | <tTHEN : "then">          {infoLexico(matchedToken,"then");}
     | <tELSE : "else">          {infoLexico(matchedToken,"else");}
@@ -117,7 +118,8 @@ TOKEN : /*Identificadores*/
 | 	< #LETRA : [ "a"-"z", "A" -"Z"] >
 |   < #BARRA_POR_DELANTE : "_"< LETRA > | "_"< DIGITO > >
                         //[a-z,A-Z]([a-z,A-Z]|_[a-z,A-Z]|_[0-9]|[0-9])*_?|_
-| 	< tIDENTIFICADOR: (< LETRA >(< LETRA > | < BARRA_POR_DELANTE > | < DIGITO >)*("_")?) | "_" > 	{infoLexico(matchedToken,"identificador");}
+| 	< tIDENTIFICADOR: < LETRA >(< LETRA > | < BARRA_POR_DELANTE > | < DIGITO >)*("_")? |
+"_"((< LETRA > | < DIGITO >) (< LETRA > | < BARRA_POR_DELANTE > | < DIGITO >)*("_")?)? > 	{infoLexico(matchedToken,"identificador");}
 
   
 }
@@ -125,7 +127,7 @@ TOKEN : /*Identificadores*/
 TOKEN : /* Valores */
 {
 
-   < tVALORENTERO : (< DIGITO >)+ >
+   < tVALORENTERO : (< DIGITO >)+ >                     {infoLexico(matchedToken,"valor entero");}
 |   < tVALORBOOLEANO : ("true"| "false") >				{infoLexico(matchedToken,"valor booleano");}
 | 	< tVALORCHAR : ("\"")~["\""]("\"") >				{infoLexico(matchedToken,"valor caracter");}
 | 	< tVALORCADENA : ("\"")~["\""](~["\""])+("\"") >	{infoLexico(matchedToken,"valor cadena");}
@@ -134,12 +136,12 @@ TOKEN : /* Valores */
 
 TOKEN : /*Separadores*/
 {
-  < tPC : ";" >
-| < tCOMA : "," >
-| < tAP: "(" > //abre parentesis
-| < tCP: ")" > //cierra parentesis
-| < tAV: "[" > //abre vector
-| < tCV: "]" > //cierra vector
+  < tPC : ";" >                     {infoLexico(matchedToken,"punto y coma");}
+| < tCOMA : "," >                   {infoLexico(matchedToken,"coma");}
+| < tAP: "(" >                      {infoLexico(matchedToken,"abre parentesis");}
+| < tCP: ")" >                      {infoLexico(matchedToken,"cierro parentesis");}
+| < tAV: "[" >                      {infoLexico(matchedToken,"abre corchete");}
+| < tCV: "]" >                      {infoLexico(matchedToken,"cierro corchete");}
 }
 
 
@@ -151,7 +153,7 @@ void S () :
 
 }
 {
-  
+
   (
     < tAND >
   | < tOR >
