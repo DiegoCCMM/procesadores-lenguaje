@@ -31,3 +31,7 @@ hs_err_pid*
 build
 
 build.xml
+
+dist/*
+jcc_files/*
+lib*
