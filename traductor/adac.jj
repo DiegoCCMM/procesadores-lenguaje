@@ -100,9 +100,9 @@ TOKEN : /* Palabras reservadas */
     | <tELSE : "else">          {infoLexico(matchedToken,"else");}
     | <tWHILE: "while" >        {infoLexico(matchedToken,"while");}
     | <tPUT_L : "put_line">     {infoLexico(matchedToken,"put_line");}
+    | <tSKIP_L : "skip_line">     {infoLexico(matchedToken,"skip_line");}
   	| <tPUT : "put">			{infoLexico(matchedToken,"put");}
   	| <tGET : "get">			{infoLexico(matchedToken,"get");}
-    | <tGET_L : "get_line">      {infoLexico(matchedToken,"get_line");}
   	| <tINT : "integer">		{infoLexico(matchedToken,"entero");}
   	| <tBOOL : "boolean"> 		{infoLexico(matchedToken,"booleano"); }
   	| <tCHAR : "character"> 	{infoLexico(matchedToken,"caracter");}
