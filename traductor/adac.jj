@@ -8,33 +8,33 @@ PARSER_BEGIN(adac)
 package traductor;
 
 public class adac {
-	static void errorLexico(Token t) {
-		System.out.println("ERROR LÉXICO (" + SimpleCharStream.getBeginLine() +
-                ", " + SimpleCharStream.getBeginColumn() + "): símbolo no reconocido: <" +
+  static void errorLexico(Token t) {
+    System.out.println("ERROR LÃ‰XICO (" + SimpleCharStream.getBeginLine() +
+                ", " + SimpleCharStream.getBeginColumn() + "): sÃ­mbolo no reconocido: <" +
                 SimpleCharStream.GetImage().charAt(adacTokenManager.curLexState) + ">");
 
-	}
+  }
   
     public static void main(String[] args) {
-    	adac parser;
-    	try {
-	    	if(args.length == 0) { //entrada desde stdin
-				parser = new adac(System.in);
-				System.out.println("Leyendo de la entrada estandar...");
-			}
-			else { //entrada desde fichero en args[0]
-	            parser = new adac(new java.io.FileInputStream(args[0])); 
-			}
-			parser.S(); //invoca simbolo inicial de la gramática
-		}
-		catch (java.io.FileNotFoundException e) {
-			System.err.println ("Fichero " + args[0] + " no encontrado.");
-		}
-		catch (TokenMgrError e) {
-        	errorLexico(token);
+      adac parser;
+      try {
+        if(args.length == 0) { //entrada desde stdin
+        parser = new adac(System.in);
+        System.out.println("Leyendo de la entrada estandar...");
+      }
+      else { //entrada desde fichero en args[0]
+              parser = new adac(new java.io.FileInputStream(args[0])); 
+      }
+      parser.S(); //invoca simbolo inicial de la gramÃ¡tica
+    }
+    catch (java.io.FileNotFoundException e) {
+      System.err.println ("Fichero " + args[0] + " no encontrado.");
+    }
+    catch (TokenMgrError e) {
+          errorLexico(token);
         }
         catch (ParseException e) {
-        	System.err.println("SINT_ERROR: " + e.getMessage());
+          System.err.println("SINT_ERROR: " + e.getMessage());
         } 
     }
 }
@@ -43,7 +43,7 @@ PARSER_END(adac)
 TOKEN_MGR_DECLS: {
   
 static void infoLexico(Token t,String nombre) {
-	System.out.println("("+ t.beginLine+","+t.beginColumn+"): " + nombre +" \""+ t.image+"\"");
+  System.out.println("("+ t.beginLine+","+t.beginColumn+"): " + nombre +" \""+ t.image+"\"");
 }
 
 
@@ -63,7 +63,7 @@ SKIP :
   "\n" : DEFAULT
 }
 <COMMENT> MORE : {
-	<~[]>
+  <~[]>
 }
 
 TOKEN : /* Operadores */
@@ -101,14 +101,14 @@ TOKEN : /* Palabras reservadas */
     | <tWHILE: "while" >        {infoLexico(matchedToken,"while");}
     | <tPUT_L : "put_line">     {infoLexico(matchedToken,"put_line");}
     | <tSKIP_L : "skip_line">     {infoLexico(matchedToken,"skip_line");}
-  	| <tPUT : "put">			{infoLexico(matchedToken,"put");}
-  	| <tGET : "get">			{infoLexico(matchedToken,"get");}
-  	| <tINT : "integer">		{infoLexico(matchedToken,"entero");}
-  	| <tBOOL : "boolean"> 		{infoLexico(matchedToken,"booleano"); }
-  	| <tCHAR : "character"> 	{infoLexico(matchedToken,"caracter");}
-  	| <tTRUE : "true"> 			{infoLexico(matchedToken,"true");}
-  	| <tFALSE : "false"> 		{infoLexico(matchedToken,"false");}
-  	| <tINT2CHAR : "int2char">	{infoLexico(matchedToken,"conversion entero-caracter");}
+    | <tPUT : "put">      {infoLexico(matchedToken,"put");}
+    | <tGET : "get">      {infoLexico(matchedToken,"get");}
+    | <tINT : "integer">    {infoLexico(matchedToken,"entero");}
+    | <tBOOL : "boolean">     {infoLexico(matchedToken,"booleano"); }
+    | <tCHAR : "character">   {infoLexico(matchedToken,"caracter");}
+    | <tTRUE : "true">      {infoLexico(matchedToken,"true");}
+    | <tFALSE : "false">    {infoLexico(matchedToken,"false");}
+    | <tINT2CHAR : "int2char">  {infoLexico(matchedToken,"conversion entero-caracter");}
     | <tCHAR2INT : "char2int">  {infoLexico(matchedToken,"conversion caracter-entero");}
 
 }
@@ -116,12 +116,12 @@ TOKEN : /* Palabras reservadas */
 
 TOKEN : /*Identificadores*/
 {
-	< #DIGITO : [ "0"-"9" ] >
-| 	< #LETRA : [ "a"-"z", "A" -"Z"] >
+  < #DIGITO : [ "0"-"9" ] >
+|   < #LETRA : [ "a"-"z", "A" -"Z"] >
 |   < #BARRA_POR_DELANTE : "_"< LETRA > | "_"< DIGITO > >
                         //[a-z,A-Z]([a-z,A-Z]|_[a-z,A-Z]|_[0-9]|[0-9])*_?|_
-| 	< tIDENTIFICADOR: < LETRA >(< LETRA > | < BARRA_POR_DELANTE > | < DIGITO >)*("_")? |
-"_"((< LETRA > | < DIGITO >) (< LETRA > | < BARRA_POR_DELANTE > | < DIGITO >)*("_")?)? > 	{infoLexico(matchedToken,"identificador");}
+|   < tIDENTIFICADOR: < LETRA >(< LETRA > | < BARRA_POR_DELANTE > | < DIGITO >)*("_")? |
+"_"((< LETRA > | < DIGITO >) (< LETRA > | < BARRA_POR_DELANTE > | < DIGITO >)*("_")?)? >  {infoLexico(matchedToken,"identificador");}
 
   
 }
@@ -130,9 +130,9 @@ TOKEN : /* Valores */
 {
 
    < tVALORENTERO : (< DIGITO >)+ >                     {infoLexico(matchedToken,"valor entero");}
-|   < tVALORBOOLEANO : ("true"| "false") >				{infoLexico(matchedToken,"valor booleano");}
-| 	< tVALORCHAR : ("\"")~["\""]("\"") >				{infoLexico(matchedToken,"valor caracter");}
-| 	< tVALORCADENA : ("\"")~["\""](~["\""])+("\"") >	{infoLexico(matchedToken,"valor cadena");}
+|   < tVALORBOOLEANO : ("true"| "false") >        {infoLexico(matchedToken,"valor booleano");}
+|   < tVALORCHAR : ("\"")~["\""]("\"") >        {infoLexico(matchedToken,"valor caracter");}
+|   < tVALORCADENA : ("\"")~["\""](~["\""])+("\"") >  {infoLexico(matchedToken,"valor cadena");}
 }
 
 
@@ -145,6 +145,108 @@ TOKEN : /*Separadores*/
 | < tAV: "[" >                      {infoLexico(matchedToken,"abre corchete");}
 | < tCV: "]" >                      {infoLexico(matchedToken,"cierro corchete");}
 }
+
+
+/*programa ::= <tPROCEDURE> <tIDENTIFICADOR> <tIS> declaracion_variables declaracion_acciones bloque_sentencias <EOF> */
+void programa():
+{ }
+{
+  <tPROCEDURE> <tIDENTIFICADOR> <tIS> declaracion_variables() declaracion_acciones() /*bloque_sentencias()*/ <EOF>
+}
+
+/***DECLARACION DE VARIABLES***/
+/*declaracion_variables ::= ( declaracion <tPC> )* */
+void declaracion_variables():
+{}
+{
+   ( declaracion() <tPC> )*
+}
+
+/*declaracion ::= tipo_variables lista_vars */
+void declaracion():
+{}
+{
+  tipo_variables() lista_vars()
+}
+
+/*tipo_variables ::= ( <tINT> | <tCHAR> | <tBOOL> ) */
+void tipo_variables():
+{}
+{
+  ( <tINT> | <tCHAR> | <tBOOL> )
+}
+ /*lista_vars := variable ( <tCOMA> variable )* */
+ void lista_vars():
+ {}
+ {
+   variable() ( <tCOMA> variable() )*
+ }
+ 
+ /*variable := <tIDENTIFICADOR> variable_vector*/
+ void variable():
+ {}
+ {
+   <tIDENTIFICADOR> variable_vector()
+ }
+ 
+ /*variable_vector ::= <tAV> <tVALORENTERO> <tCV> | epsilon */
+ void variable_vector():
+ {}
+ {
+   <tAV> <tVALORENTERO> <tCV> | /*epsilon*/
+}
+ 
+
+
+
+
+/***DECLARACION DE ACCIONES****/
+/*declaracion_acciones ::= ( declaracion_accion )* */
+void declaracion_acciones():
+{}
+{
+  ( declaracion_accion() )*
+}
+
+/*declaracion_accion ::= declaracion_funcion | declaracion_proc */
+void declaracion_accion():
+{}
+{
+  declaracion_funcion() | declaracion_proc()
+}
+
+/*declaracion_funcion ::= cabecera_funcion declaracion_variables bloque_sentencias*/
+void declaracion_funcion(): {}
+{
+  cabecera_funcion() declaracion_variables() bloque_sentencias()
+}
+
+/*cabecera_funcion ::= <tFUNCTION> tipo_variables <tIDENTIFICADOR> parametros_formales <tIS>*/
+void cabecera_funcion():
+{}
+{
+   <tFUNCTION> tipo_variables() <tIDENTIFICADOR> parametros_formales() <tIS>
+}
+
+declaracion_proc ::= cabecera_proc declaracion_variables bloque_sentencias
+cabecera_proc ::= <tPROCEDURE> <tIDENTIFICADOR> parametros_formales <tIS>
+
+
+parametros_formales ::= <tAP> ( parametros ( <tPC> parametros )* )? <tCP> 
+parametros ::= clase_parametros tipo_variables lista_parametros   
+clase_parametros ::= ( <tVAL> | <tREF> ) 
+parametro ::= <tIDENTIFICADOR> parametro_vector
+parametro_vector ::= <tAV> <tVALORENTERO> <tCV> | /*epsilon*/
+lista_parametros ::= parametro lista_parametrosRec
+lista_parametrosRec ::=  ( <tCOMA> parametro )* 
+
+
+
+
+
+
+
+
 
 
 
@@ -205,8 +307,8 @@ void S () :
   | < tAV > 
   | < tCV > 
 
-	)+
-	< EOF >
+  )+
+  < EOF >
 }
 
 
