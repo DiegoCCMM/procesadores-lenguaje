@@ -151,7 +151,7 @@ TOKEN : /*Separadores*/
 void programa():
 { }
 {
-  <tPROCEDURE> <tIDENTIFICADOR> <tIS> declaracion_variables() declaracion_acciones() /*TODO bloque_sentencias()*/ <EOF>
+  <tPROCEDURE> <tIDENTIFICADOR> <tIS> declaracion_variables() declaracion_acciones()  bloque_sentencias() <EOF>
 }
 
 /***DECLARACION DE VARIABLES***/
@@ -215,7 +215,7 @@ void declaracion_accion():
 /*declaracion_funcion ::= cabecera_funcion declaracion_variables bloque_sentencias*/
 void declaracion_funcion(): {}
 {
-  cabecera_funcion() declaracion_variables() /*TODO bloque_sentencias()*/
+  cabecera_funcion() declaracion_variables()  bloque_sentencias()
 }
 
 /*cabecera_funcion ::= <tFUNCTION> tipo_variables <tIDENTIFICADOR> parametros_formales <tIS>*/
@@ -227,7 +227,7 @@ void cabecera_funcion():
 /*declaracion_proc ::= cabecera_proc declaracion_variables bloque_sentencias*/
 void declaracion_proc(): {}
 {
-  cabecera_proc() declaracion_variables() /*TODO bloque_sentencias()*/
+  cabecera_proc() declaracion_variables()  bloque_sentencias()
 }
 /*cabecera_proc ::= <tPROCEDURE> <tIDENTIFICADOR> parametros_formales <tIS>*/
 void cabecera_proc():
@@ -277,10 +277,69 @@ void lista_parametrosRec():
  {}
  {
    <tAV> <tVALORENTERO> <tCV>
-}
+ }
 
+ /*bloque_sentencias ::= <tBEGIN> lista_sentencias <tEND>*/
+ void bloque_sentencias():
+ {}
+ {
+   <tBEGIN> lista_sentencias() <tEND>
+ }
+ /*lista_sentencias ::= sentencia**/
+  void lista_sentencias():
+  {}
+  {
+    ( sentencia() )+    //una o más sentencias
+    | {  }
+  }
+  /*lista_sentencias ::= sentencia**/
+    void sentencia():
+    {}
+    {
+      leer() <tPC>
+        | skip_linea() <tPC>	//coge toda la entrada hasta \n
+        | escribir() <tPC>
+        | escribir_linea() <tPC>
+        /*| invocacion_accion()
+        | asignacion() <tPC>
+        | seleccion()
+        | mientras_que()*/
+        | <tRETURN> <tPC>
+    }
 
+    void leer():
+    {}
+    {
+      <tGET> <tAP> lista_asignables() <tCP>
+    }
 
+    void lista_asignables():    //se puede sustituir por variable
+    {}
+    {
+      <tIDENTIFICADOR> (variable_vector())? lista_asignablesRec()
+    }
+    void lista_asignablesRec():    //se puede sustituir por variable
+    {}
+    {
+      ( <tIDENTIFICADOR> (variable_vector())? )*
+    }
+
+    void skip_linea():
+    {}
+    {
+       <tSKIP_L> "(" ")"
+    }
+    void escribir():
+    {}
+    {
+       <tPUT> "(" lista_escribibles() + ")"
+    }
+
+    void escribir_linea():
+    {}
+    {
+       <tPUT_L> "(" lista_escribibles() * ")"
+    }
 
 
 
