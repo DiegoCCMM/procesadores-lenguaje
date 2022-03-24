@@ -9,8 +9,8 @@ package traductor;
 
 public class adac {
   static void errorLexico(Token t) {
-    System.out.println("ERROR LÃ‰XICO (" + SimpleCharStream.getBeginLine() +
-                ", " + SimpleCharStream.getBeginColumn() + "): sÃ­mbolo no reconocido: <" +
+    System.out.println("ERROR L�XICO (" + SimpleCharStream.getBeginLine() +
+                ", " + SimpleCharStream.getBeginColumn() + "): s�mbolo no reconocido: <" +
                 SimpleCharStream.GetImage().charAt(adacTokenManager.curLexState) + ">");
 
   }
@@ -25,7 +25,7 @@ public class adac {
       else { //entrada desde fichero en args[0]
               parser = new adac(new java.io.FileInputStream(args[0])); 
       }
-      parser.programa(); //invoca simbolo inicial de la gramÃ¡tica
+      parser.programa(); //invoca simbolo inicial de la gramÃƒÂ¡tica
     }
     catch (java.io.FileNotFoundException e) {
       System.err.println ("Fichero " + args[0] + " no encontrado.");
@@ -90,7 +90,7 @@ TOKEN : /* Palabras reservadas */
 <tPROCEDURE : "procedure">      {infoLexico(matchedToken,"procedure");}
     | <tFUNCTION : "function">  {infoLexico(matchedToken,"function");}
     | <tRETURN : "return">      {infoLexico(matchedToken,"return");}
-    | <tVAR : "var">            {infoLexico(matchedToken,"variable");}
+    | <tVAL : "val">            {infoLexico(matchedToken,"valor");}
     | <tREF : "ref">            {infoLexico(matchedToken,"referencia");}
     | <tIS : "is">              {infoLexico(matchedToken,"is");}
     | <tBEGIN : "begin">        {infoLexico(matchedToken,"begin");}
@@ -98,7 +98,8 @@ TOKEN : /* Palabras reservadas */
     | <tIF : "if">              {infoLexico(matchedToken,"if");}
     | <tTHEN : "then">          {infoLexico(matchedToken,"then");}
     | <tELSE : "else">          {infoLexico(matchedToken,"else");}
-    | <tWHILE: "while" >        {infoLexico(matchedToken,"while");}
+    | <tWHILE: "while">        {infoLexico(matchedToken,"while");}
+    | <tDO: "do">				{infoLexico(matchedToken,"do");}
     | <tPUT_L : "put_line">     {infoLexico(matchedToken,"put_line");}
     | <tSKIP_L : "skip_line">     {infoLexico(matchedToken,"skip_line");}
     | <tPUT : "put">      {infoLexico(matchedToken,"put");}
@@ -116,12 +117,11 @@ TOKEN : /* Palabras reservadas */
 
 TOKEN : /*Identificadores*/
 {
-  < #DIGITO : [ "0"-"9" ] >
-|   < #LETRA : [ "a"-"z", "A" -"Z"] >
-|   < #BARRA_POR_DELANTE : "_"< LETRA > | "_"< DIGITO > >
+  <#DIGITO : [ "0"-"9" ]>
+|   <#LETRA : [ "a"-"z", "A" -"Z"]>
+|   <#BARRA_POR_DELANTE : "_"<LETRA> | "_"<DIGITO>>
                         //[a-z,A-Z]([a-z,A-Z]|_[a-z,A-Z]|_[0-9]|[0-9])*_?|_
-|   < tIDENTIFICADOR: < LETRA >(< LETRA > | < BARRA_POR_DELANTE > | < DIGITO >)*("_")? |
-"_"((< LETRA > | < DIGITO >) (< LETRA > | < BARRA_POR_DELANTE > | < DIGITO >)*("_")?)? >  {infoLexico(matchedToken,"identificador");}
+|   <tID: <LETRA>(<LETRA> | <BARRA_POR_DELANTE> | <DIGITO>)*("_")? | "_"((<LETRA> | <DIGITO>) (<LETRA> | <BARRA_POR_DELANTE> | <DIGITO>)*("_")?)?>  {infoLexico(matchedToken,"identificador");}
 
   
 }
@@ -129,29 +129,29 @@ TOKEN : /*Identificadores*/
 TOKEN : /* Valores */
 {
 
-   < tVALORENTERO : (< DIGITO >)+ >                     {infoLexico(matchedToken,"valor entero");}
-|   < tVALORBOOLEANO : ("true"| "false") >        {infoLexico(matchedToken,"valor booleano");}
-|   < tVALORCHAR : ("\"")~["\""]("\"") >        {infoLexico(matchedToken,"valor caracter");}
-|   < tVALORCADENA : ("\"")~["\""](~["\""])+("\"") >  {infoLexico(matchedToken,"valor cadena");}
+   <tVALORENTERO : (<DIGITO>)+>                     {infoLexico(matchedToken,"valor entero");}
+|   <tVALORBOOLEANO : ("true"| "false")>        {infoLexico(matchedToken,"valor booleano");}
+|   <tVALORCHAR : ("\"")~["\""]("\"")>        {infoLexico(matchedToken,"valor caracter");}
+|   <tVALORCADENA : ("\"")~["\""](~["\""])+("\"")>  {infoLexico(matchedToken,"valor cadena");}
 }
 
 
 TOKEN : /*Separadores*/
 {
-  < tPC : ";" >                     {infoLexico(matchedToken,"punto y coma");}
-| < tCOMA : "," >                   {infoLexico(matchedToken,"coma");}
-| < tAP: "(" >                      {infoLexico(matchedToken,"abre parentesis");}
-| < tCP: ")" >                      {infoLexico(matchedToken,"cierro parentesis");}
-| < tAV: "[" >                      {infoLexico(matchedToken,"abre corchete");}
-| < tCV: "]" >                      {infoLexico(matchedToken,"cierro corchete");}
+  <tPC : ";">                     {infoLexico(matchedToken,"punto y coma");}
+| <tCOMA : ",">                   {infoLexico(matchedToken,"coma");}
+| <tAP: "(">                      {infoLexico(matchedToken,"abre parentesis");}
+| <tCP: ")">                      {infoLexico(matchedToken,"cierro parentesis");}
+| <tAV: "[">                      {infoLexico(matchedToken,"abre corchete");}
+| <tCV: "]">                      {infoLexico(matchedToken,"cierro corchete");}
 }
 
 
-/*programa ::= <tPROCEDURE> <tIDENTIFICADOR> <tIS> declaracion_variables declaracion_acciones bloque_sentencias <EOF> */
+/*programa ::= <tPROCEDURE> <tID> <tIS> declaracion_variables declaracion_acciones bloque_sentencias <EOF> */
 void programa():
 { }
 {
-  <tPROCEDURE> <tIDENTIFICADOR> <tIS> declaracion_variables() declaracion_acciones()  bloque_sentencias() <EOF>
+  <tPROCEDURE> <tID> <tIS> declaracion_variables() declaracion_acciones()  bloque_sentencias() <EOF>
 }
 
 /***DECLARACION DE VARIABLES***/
@@ -182,11 +182,11 @@ void tipo_variables():
    variable() ( <tCOMA> variable() )*
  }
  
- /*variable := <tIDENTIFICADOR> variable_vector*/
+ /*variable := <tID> variable_vector*/
  void variable():
  {}
  {
-   <tIDENTIFICADOR> (variable_vector())?
+   <tID> (variable_vector())? /*podemos utilizar solo <tAV> <tVALORENTERO> <tCV> */
  }
  
  /*variable_vector ::= <tAV> <tVALORENTERO> <tCV> | epsilon */
@@ -196,193 +196,360 @@ void tipo_variables():
    <tAV> <tVALORENTERO> <tCV>
 }
 
-
 /***DECLARACION DE ACCIONES****/
 /*declaracion_acciones ::= ( declaracion_accion )* */
-void declaracion_acciones():
+void declaracion_acciones() :
 {}
 {
-  ( declaracion_accion() )*
+  (declaracion_accion())*
 }
 
 /*declaracion_accion ::= declaracion_funcion | declaracion_proc */
-void declaracion_accion():
+void declaracion_accion() :
 {}
 {
   declaracion_funcion() | declaracion_proc()
 }
 
 /*declaracion_funcion ::= cabecera_funcion declaracion_variables bloque_sentencias*/
-void declaracion_funcion(): {}
-{
-  cabecera_funcion() declaracion_variables()  bloque_sentencias()
-}
-
-/*cabecera_funcion ::= <tFUNCTION> tipo_variables <tIDENTIFICADOR> parametros_formales <tIS>*/
-void cabecera_funcion():
+void declaracion_funcion() :
 {}
 {
-   <tFUNCTION> tipo_variables() <tIDENTIFICADOR> parametros_formales() <tIS>
+  cabecera_funcion() declaracion_variables() bloque_sentencias()
 }
+
+/*cabecera_funcion ::= <tFUNCTION> tipo_variables <tID> parametros_formales <tIS>*/
+void cabecera_funcion() :
+{}
+{
+  <tFUNCTION> tipo_variables() <tID> parametros_formales() <tIS>
+}
+
 /*declaracion_proc ::= cabecera_proc declaracion_variables bloque_sentencias*/
-void declaracion_proc(): {}
-{
-  cabecera_proc() declaracion_variables()  bloque_sentencias()
-}
-/*cabecera_proc ::= <tPROCEDURE> <tIDENTIFICADOR> parametros_formales <tIS>*/
-void cabecera_proc():
+void declaracion_proc() :
 {}
 {
-   <tPROCEDURE> <tIDENTIFICADOR> parametros_formales() <tIS>
+  cabecera_proc() declaracion_variables() bloque_sentencias()
 }
+
+/*cabecera_proc ::= <tPROCEDURE> <tID> parametros_formales <tIS>*/
+void cabecera_proc() :
+{}
+{
+  <tPROCEDURE> <tID> parametros_formales() <tIS>
+}
+
 /*parametros_formales ::= <tAP> ( parametros ( <tPC> parametros )* )? <tCP> */
-void parametros_formales():
+void parametros_formales() :
 {}
 {
-   <tAP> ( parametros() ( <tPC> parametros() )* )? <tCP>
+  <tAP> (parametros() (<tPC> parametros() )* )? <tCP>
 }
+
 /*parametros ::= clase_parametros tipo_variables lista_parametros   */
-void parametros():
+void parametros() :
 {}
 {
-    clase_parametros() tipo_variables() lista_parametros()
+  clase_parametros() tipo_variables() lista_parametros()
 }
 
-void clase_parametros():
+void clase_parametros() :
 {}
 {
-     <tVAR> | <tREF>
+  <tVAL>
+| <tREF>
 }
+
 /*lista_parametros ::= parametro lista_parametrosRec*/
-void lista_parametros():
+void lista_parametros() :
 {}
 {
-    parametro() lista_parametrosRec()
+  parametro() (<tCOMA> parametro())* /* lista_parametrosRec() */
 }
-/*lista_parametrosRec ::=  ( <tCOMA> parametro )* */
-void lista_parametrosRec():
+
+/*lista_parametrosRec ::=  ( <tCOMA> parametro )* 
+void lista_parametrosRec() :
 {}
 {
-    ( <tCOMA> parametro() )*
+  (<tCOMA> parametro())*
 }
- /*parametro := <tIDENTIFICADOR> parametro_vector*/
- void parametro():
- {}
- {
-   <tIDENTIFICADOR> (parametro_vector())?
- }
+*/
 
- /*parametro_vector ::= <tAV> <tVALORENTERO> <tCV> | epsilon */
- void parametro_vector():
- {}
- {
-   <tAV> <tVALORENTERO> <tCV>
+/*parametro := <tID> parametro_vector*/
+void parametro() :
+{}
+{
+  <tID> (parametro_vector())?
+}
 
- }
+/*parametro_vector ::= <tAV> <tVALORENTERO> <tCV> */
+/*IGUAL QUE VARIABLE VECTOR-- ¿ELIMINAR?*/
+void parametro_vector() :
+{}
+{
+  <tAV> <tVALORENTERO> <tCV>
+}
+/***BLOQUE SENTENCIAS**/
 
+/*bloque_sentencias ::= <tBEGIN> lista_sentencias <tEND>*/
+void bloque_sentencias() :
+{}
+{
+  <tBEGIN> lista_sentencias() <tEND>
+}
 
- /*bloque_sentencias ::= <tBEGIN> lista_sentencias <tEND>*/
- void bloque_sentencias():
- {}
- {
-   <tBEGIN> lista_sentencias() <tEND>
- }
- /*lista_sentencias ::= sentencia**/
-  void lista_sentencias():
+/*lista_sentencias ::= sentencia**/
+void lista_sentencias() :
+{}
+{
+  (sentencia())+ //una o mas sentencias
+|
   {}
-  {
-    ( sentencia() )+    //una o más sentencias
-    | {  }
-  }
-  /*lista_sentencias ::= sentencia**/
-    void sentencia():
-    {}
-    {
-      leer() <tPC>
-        | skip_linea() <tPC>	//coge toda la entrada hasta \n
-        | escribir() <tPC>
-        | escribir_linea() <tPC>
-        | invocacion_procedimiento()
-        | asignacion() <tPC>
-        | seleccion()
-        | mientras_que()
-        | <tRETURN> expresion() <tPC>
-    }
+}
 
-    void leer():
-    {}
-    {
-      <tGET> <tAP> lista_asignables() <tCP>
-    }
+/*lista_sentencias ::= sentencia**/
+void sentencia() :
+{}
+{
+  leer() <tPC>
+| skip_linea() <tPC>	 //coge toda la entrada hasta \n
+| escribir() <tPC>
+| escribir_linea() <tPC>
+| LOOKAHEAD(2) invocacion_procedimiento()
+| LOOKAHEAD(2) asignacion() <tPC>
+| seleccion()
+| mientras_que()
+| <tRETURN> expresion() <tPC>
+}
 
-    void lista_asignables():    //se puede sustituir por variable
-    {}
-    {
-      <tIDENTIFICADOR> (asignable_vector())? lista_asignablesRec()
-    }
-    void lista_asignablesRec():    //se puede sustituir por variable
-    {}
-    {
-      ( <tIDENTIFICADOR> (asignable_vector())? )*
-    }
+void leer() :
+{}
+{
+  <tGET> <tAP> lista_asignables() <tCP>
+}
 
-    void asignable_vector():
-    {}
-    {
-        "[" expresion() "]"
-    }
+/*lista_asignables() := (< tID >) lista_asignablesRec */
+void lista_asignables() : //se puede sustituir por variable
+{}
+{
+  <tID> (asignable_vector() )? lista_asignablesRec()
+}
+/*lista_asignablesRec ::= (asignable_vector)* */
+void lista_asignablesRec() : //se puede sustituir por variable
+{}
+{
+  (<tID> (asignable_vector())?)*
+}
+/*asignable_vector ::= <tAV> expresion <tCV> */
+void asignable_vector() :
+{}
+{
+  <tAV> expresion() <tCV>
+}
 
-    void skip_linea():
-    {}
-    {
-       <tSKIP_L> "(" ")"
-    }
-    void escribir():
-    {}
-    {
-       <tPUT> "(" lista_escribibles()  ")"
-    }
+/*skip_linea ::= <tSKIP_L> <tAP> <tCP>*/
+void skip_linea() :
+{}
+{
+  <tSKIP_L> <tAP> <tCP>
+}
 
-    void escribir_linea():
-    {}
-    {
-       <tPUT_L> "(" cero_o_lista_escribibles() ")"
-    }
+/*escribir ::= <tPUT> <tAP> lista_escribibles <tCP>*/
+void escribir() :
+{}
+{
+  <tPUT> <tAP> lista_escribibles() <tCP>
+}
 
-    void cero_o_lista_escribibles():
-    {}
-    {
-        lista_escribibles()
-        | { }
-    }
-    void lista_escribibles():   //1 o más escribibles
-    {}
-    {
-        (expresion() | <tVALORCHAR> | <tVALORCADENA>) lista_escribiblesRec()
-    }
+/*escribir_linea ::= <tPUT_L> <tAP> lista_escribibles <tCP>*/
+void escribir_linea() :
+{}
+{
+  <tPUT_L> <tAP> cero_o_lista_escribibles() <tCP>
+  /* Se podria sustituir cero_o_lista_escribibles por (lista_escribibles())* */
+}
 
-    void lista_escribiblesRec():
-    {}
-    {
-        ("," (expresion() | <tVALORCHAR> | <tVALORCADENA>))*
-    }
+/*cero_o_lista_escribibles ::= lista_escribibles() | epsilon */
+void cero_o_lista_escribibles() :
+{}
+{
+  lista_escribibles()
+| {}
+/*DEFINIR CADENA VACIA*/
 
-    void invocacion_procedimiento():    //IMPORTANTE TIENE QUE SER PROCEDIMIENTO EN EL SEMÁNTICO
-    {}
-    {
-        <tIDENTIFICADOR> argumentos() <tPC>
-    }
+}
 
-    void argumentos():
-    {}
-    {
-        "(" ( lista_expresiones() )? ")"
-    }
-    void lista_expresiones():
-    {}
-    {
-            expresion() ( "," expresion())*
-    }
+/*lista_escribibles ::=   expresion | <tVALORCHAR> | <tVALORCADENA> */
+void lista_escribibles() : //1 o mÃ¡s escribibles
+{}
+{
+  (expresion()) lista_escribiblesRec()
+}
+
+/* lista_escribiblesRec ::= (<tCOMA> (expresion | <tVALORCHAR> | <tVALORCADENA> ) )* */
+void lista_escribiblesRec() :
+{}
+{
+  (<tCOMA> expresion())*
+}
+
+/*asignacion ::= var_asignacion <tOPAS> expresion*/
+void asignacion() :
+{}
+{
+  var_asignacion() <tOPAS> expresion()
+}
+
+/*var_asignacion ::= <tIDENTIFICADOR> var_Vector*/
+void var_asignacion() :
+{}
+{
+  <tID> var_vector()
+}
+
+/*var_vector ::= <tAV> expresion <tCV> | epsilon */
+void var_vector() :
+{}
+{
+  <tAV> expresion() <tCV>
+|
+  {} /*epsilon*/
+}
+
+/*invocacion_procedimiento ::= <tID> argumentos <tPC> */
+void invocacion_procedimiento() : /*IMPORTANTE TIENE QUE SER PROCEDIMIENTO EN EL SEMANTICO*/
+{}
+{
+  <tID> argumentos() <tPC>
+}
+
+/*argumentos ::= <tAP> ( lista_expresiones )? <tCP> */
+void argumentos() :
+{}
+{
+  <tAP> (lista_expresiones())? <tCP> 
+}
+
+/*lista_expresiones ::= expresion (<tCOMA> expresion)* */
+void lista_expresiones() :
+{}
+{
+  expresion() (<tCOMA> expresion())*
+}
+
+/*seleccion ::= <tIF> expresion <tTHEN> lista_sentencias (<tELSE> lista_sentencias)? <tEND>*/
+void seleccion() :
+{}
+{
+  <tIF> expresion() <tTHEN> lista_sentencias()
+  (
+    <tELSE> lista_sentencias()
+  )?
+  <tEND> /*REVISAR*/
+}
+
+/*mientras_que ::= <tWHILE> expresion <tDO> lista_sentencias <tEND>*/
+void mientras_que() :
+{}
+{
+  <tWHILE> expresion() <tDO> lista_sentencias() <tEND>
+}
+
+/*expresion := expresion_simple() (operador_relacional() expresion_simple())?*/
+void expresion() :
+{}
+{
+  expresion_simple()
+  (
+    operador_relacional() expresion_simple()
+  )?
+}
+
+/*operador_relacional : <tIGUAL> | <tMENOR> | <tMAYOR> | <tMEI> | <tMAI> | <tNI> */
+void operador_relacional() :
+{}
+{
+  <tIGUAL>
+| <tMENOR>
+| <tMAYOR>
+| <tMEI>
+| <tMAI>
+| <tNI>
+}
+
+/* expresion_simple : ( <tSUMA> | <tRESTA> )? termino ( operador_aditivo termino )* */
+void expresion_simple() :
+{}
+{
+  (<tSUMA> | <tRESTA> )? termino() (operador_aditivo() termino() )*
+}
+
+/* operador_aditivo :=  <tSUMA>| <tRESTA>| <tOR>*/ 
+void operador_aditivo() :
+{}
+{
+  <tSUMA>
+| <tRESTA>
+| <tOR>
+}
+
+/*termino := factor ( operador_multiplicativo factor )* */
+void termino() :
+{}
+{
+  factor() (operador_multiplicativo() factor() )* 
+}
+
+/*operador_multiplicativo :=  <tMUL>| <tMOD>| <tDIV>| <tAND>*/
+void operador_multiplicativo() :
+{}
+{
+  <tMUL>
+| <tMOD>
+| <tDIV>
+| <tAND>
+}
+
+/*factor := <tNOT> factor
+| <tAP> expresion <tCP>
+| <tINT2CHAR> <tAP> expresion <tCP>
+| <tCHAR2INT> <tAP> expresion <tCP>
+| <tID> accion_o_vector
+| <tCONST_INT>
+| <tCONST_CHAR>
+| <tCONST_STRING>
+| <tTRUE>
+| <tFALSE>
+*/
+
+void factor() :
+{}
+{
+  <tNOT> factor()
+| <tAP> expresion() <tCP>
+| <tINT2CHAR> <tAP> expresion() <tCP>
+| <tCHAR2INT> <tAP> expresion() <tCP>
+| <tID> funcion_o_vector()     /*llamada a funcion o componente de vector*/
+| <tVALORENTERO>
+| <tVALORCHAR>
+| <tVALORCADENA>
+| <tTRUE>
+| <tFALSE>
+}
+
+/*funcion_o_vector := <tAP> lista_cero_o_mas_exps <tCP> | <tAV> expresion <tCV> | /*epsilon* */
+void funcion_o_vector() :
+{}
+{
+  <tAP> (lista_uno_o_mas_exps() )? <tCP> | <tAV> expresion() <tCV> | {} /*epsilon*/
+}
+
+/*lista_uno_o_mas_exps:= expresion() (<tCOMA> expresion())* */
+void lista_uno_o_mas_exps() :
+{}
+{
+  expresion() (<tCOMA> expresion() )* 
+}
 
 
 /*
@@ -393,56 +560,56 @@ void S () :
 {
 
   (
-    < tAND >
-  | < tOR >
-  | < tNOT >
-  | < tMOD >
-  | < tDIV >
-  | < tMAYOR >
-  | < tMENOR >
-  | < tIGUAL >
-  | < tMAI >
-  | < tMEI >
-  | < tNI >
-  | < tOPAS >
-  | < tSUMA >
-  | < tRESTA >
-  | < tMUL >
-  | < tPROCEDURE >
-  | < TFUNCTION >
-  | < tRETURN >
-  | < tVAR >
-  | < tREF >
-  | < tIS >
-  | < tBEGIN >
-  | < tEND >
-  | < tIF >
-  | < tTHEN >
-  | < tELSE >
-  | < tWHILE >
-  | < tPUT_L >
-  | < tPUT >
-  | < tGET >
-  | < tINT >
-  | < tBOOL >
-  | < tCHAR >
-  | < tTRUE >
-  | < tFALSE >
-  | < tINT2CHAR >
-  | < tIDENTIFICADOR >
-  | < tVALORENTERO >
-  | < tVALORBOOLEANO >
-  | < tVALORCHAR >
-  | < tVALORCADENA >
-  | < tPC >
-  | < tCOMA >
-  | < tAP > 
-  | < tCP > 
-  | < tAV > 
-  | < tCV > 
+    <tAND>
+  | <tOR>
+  | <tNOT>
+  | <tMOD>
+  | <tDIV>
+  | <tMAYOR>
+  | <tMENOR>
+  | <tIGUAL>
+  | <tMAI>
+  | <tMEI>
+  | <tNI>
+  | <tOPAS>
+  | <tSUMA>
+  | <tRESTA>
+  | <tMUL>
+  | <tPROCEDURE>
+  | <TFUNCTION>
+  | <tRETURN>
+  | <tVAL>
+  | <tREF>
+  | <tIS>
+  | <tBEGIN>
+  | <tEND>
+  | <tIF>
+  | <tTHEN>
+  | <tELSE>
+  | <tWHILE>
+  | <tPUT_L>
+  | <tPUT>
+  | <tGET>
+  | <tINT>
+  | <tBOOL>
+  | <tCHAR>
+  | <tTRUE>
+  | <tFALSE>
+  | <tINT2CHAR>
+  | <tID>
+  | <tVALORENTERO>
+  | <tVALORBOOLEANO>
+  | <tVALORCHAR>
+  | <tVALORCADENA>
+  | <tPC>
+  | <tCOMA>
+  | <tAP> 
+  | <tCP> 
+  | <tAV> 
+  | <tCV> 
 
   )+
-  < EOF >
+  <EOF>
 }
 */
 
