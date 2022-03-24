@@ -277,7 +277,9 @@ void lista_parametrosRec():
  {}
  {
    <tAV> <tVALORENTERO> <tCV>
+
  }
+
 
  /*bloque_sentencias ::= <tBEGIN> lista_sentencias <tEND>*/
  void bloque_sentencias():
@@ -300,11 +302,11 @@ void lista_parametrosRec():
         | skip_linea() <tPC>	//coge toda la entrada hasta \n
         | escribir() <tPC>
         | escribir_linea() <tPC>
-        /*| invocacion_accion()
+        | invocacion_procedimiento()
         | asignacion() <tPC>
         | seleccion()
-        | mientras_que()*/
-        | <tRETURN> <tPC>
+        | mientras_que()
+        | <tRETURN> expresion() <tPC>
     }
 
     void leer():
@@ -316,12 +318,18 @@ void lista_parametrosRec():
     void lista_asignables():    //se puede sustituir por variable
     {}
     {
-      <tIDENTIFICADOR> (variable_vector())? lista_asignablesRec()
+      <tIDENTIFICADOR> (asignable_vector())? lista_asignablesRec()
     }
     void lista_asignablesRec():    //se puede sustituir por variable
     {}
     {
-      ( <tIDENTIFICADOR> (variable_vector())? )*
+      ( <tIDENTIFICADOR> (asignable_vector())? )*
+    }
+
+    void asignable_vector():
+    {}
+    {
+        "[" expresion() "]"
     }
 
     void skip_linea():
@@ -332,18 +340,49 @@ void lista_parametrosRec():
     void escribir():
     {}
     {
-       <tPUT> "(" lista_escribibles() + ")"
+       <tPUT> "(" lista_escribibles()  ")"
     }
 
     void escribir_linea():
     {}
     {
-       <tPUT_L> "(" lista_escribibles() * ")"
+       <tPUT_L> "(" cero_o_lista_escribibles() ")"
     }
 
+    void cero_o_lista_escribibles():
+    {}
+    {
+        lista_escribibles()
+        | { }
+    }
+    void lista_escribibles():   //1 o más escribibles
+    {}
+    {
+        (expresion() | <tVALORCHAR> | <tVALORCADENA>) lista_escribiblesRec()
+    }
 
+    void lista_escribiblesRec():
+    {}
+    {
+        ("," (expresion() | <tVALORCHAR> | <tVALORCADENA>))*
+    }
 
+    void invocacion_procedimiento():    //IMPORTANTE TIENE QUE SER PROCEDIMIENTO EN EL SEMÁNTICO
+    {}
+    {
+        <tIDENTIFICADOR> argumentos() <tPC>
+    }
 
+    void argumentos():
+    {}
+    {
+        "(" ( lista_expresiones() )? ")"
+    }
+    void lista_expresiones():
+    {}
+    {
+            expresion() ( "," expresion())*
+    }
 
 
 /*
