@@ -25,7 +25,7 @@ public class adac {
       else { //entrada desde fichero en args[0]
               parser = new adac(new java.io.FileInputStream(args[0])); 
       }
-      parser.S(); //invoca simbolo inicial de la gramÃ¡tica
+      parser.programa(); //invoca simbolo inicial de la gramÃ¡tica
     }
     catch (java.io.FileNotFoundException e) {
       System.err.println ("Fichero " + args[0] + " no encontrado.");
@@ -88,7 +88,7 @@ TOKEN : /* Operadores */
 TOKEN : /* Palabras reservadas */
 {
 <tPROCEDURE : "procedure">      {infoLexico(matchedToken,"procedure");}
-    | <TFUNCTION : "function">  {infoLexico(matchedToken,"function");}
+    | <tFUNCTION : "function">  {infoLexico(matchedToken,"function");}
     | <tRETURN : "return">      {infoLexico(matchedToken,"return");}
     | <tVAR : "var">            {infoLexico(matchedToken,"variable");}
     | <tREF : "ref">            {infoLexico(matchedToken,"referencia");}
@@ -151,7 +151,7 @@ TOKEN : /*Separadores*/
 void programa():
 { }
 {
-  <tPROCEDURE> <tIDENTIFICADOR> <tIS> declaracion_variables() declaracion_acciones() /*bloque_sentencias()*/ <EOF>
+  <tPROCEDURE> <tIDENTIFICADOR> <tIS> declaracion_variables() declaracion_acciones() /*TODO bloque_sentencias()*/ <EOF>
 }
 
 /***DECLARACION DE VARIABLES***/
@@ -173,7 +173,7 @@ void declaracion():
 void tipo_variables():
 {}
 {
-  ( <tINT> | <tCHAR> | <tBOOL> )
+   <tINT> | <tCHAR> | <tBOOL>
 }
  /*lista_vars := variable ( <tCOMA> variable )* */
  void lista_vars():
@@ -186,18 +186,15 @@ void tipo_variables():
  void variable():
  {}
  {
-   <tIDENTIFICADOR> variable_vector()
+   <tIDENTIFICADOR> (variable_vector())?
  }
  
  /*variable_vector ::= <tAV> <tVALORENTERO> <tCV> | epsilon */
  void variable_vector():
  {}
  {
-   <tAV> <tVALORENTERO> <tCV> | /*epsilon*/
+   <tAV> <tVALORENTERO> <tCV>
 }
- 
-
-
 
 
 /***DECLARACION DE ACCIONES****/
@@ -218,7 +215,7 @@ void declaracion_accion():
 /*declaracion_funcion ::= cabecera_funcion declaracion_variables bloque_sentencias*/
 void declaracion_funcion(): {}
 {
-  cabecera_funcion() declaracion_variables() bloque_sentencias()
+  cabecera_funcion() declaracion_variables() /*TODO bloque_sentencias()*/
 }
 
 /*cabecera_funcion ::= <tFUNCTION> tipo_variables <tIDENTIFICADOR> parametros_formales <tIS>*/
@@ -227,18 +224,59 @@ void cabecera_funcion():
 {
    <tFUNCTION> tipo_variables() <tIDENTIFICADOR> parametros_formales() <tIS>
 }
+/*declaracion_proc ::= cabecera_proc declaracion_variables bloque_sentencias*/
+void declaracion_proc(): {}
+{
+  cabecera_proc() declaracion_variables() /*TODO bloque_sentencias()*/
+}
+/*cabecera_proc ::= <tPROCEDURE> <tIDENTIFICADOR> parametros_formales <tIS>*/
+void cabecera_proc():
+{}
+{
+   <tPROCEDURE> <tIDENTIFICADOR> parametros_formales() <tIS>
+}
+/*parametros_formales ::= <tAP> ( parametros ( <tPC> parametros )* )? <tCP> */
+void parametros_formales():
+{}
+{
+   <tAP> ( parametros() ( <tPC> parametros() )* )? <tCP>
+}
+/*parametros ::= clase_parametros tipo_variables lista_parametros   */
+void parametros():
+{}
+{
+    clase_parametros() tipo_variables() lista_parametros()
+}
 
-declaracion_proc ::= cabecera_proc declaracion_variables bloque_sentencias
-cabecera_proc ::= <tPROCEDURE> <tIDENTIFICADOR> parametros_formales <tIS>
+void clase_parametros():
+{}
+{
+     <tVAR> | <tREF>
+}
+/*lista_parametros ::= parametro lista_parametrosRec*/
+void lista_parametros():
+{}
+{
+    parametro() ( <tCOMA> parametro() )*
+}
+/*lista_parametrosRec ::=  ( <tCOMA> parametro )* */
+
+ /*parametro := <tIDENTIFICADOR> parametro_vector*/
+ void parametro():
+ {}
+ {
+   <tIDENTIFICADOR> (parametro_vector())?
+ }
+
+ /*parametro_vector ::= <tAV> <tVALORENTERO> <tCV> | epsilon */
+ void parametro_vector():
+ {}
+ {
+   <tAV> <tVALORENTERO> <tCV>
+}
+ //void epsilon():{ System.out.prntln("epsilon"); }{ System.out.prntln("epsilon"); }
 
 
-parametros_formales ::= <tAP> ( parametros ( <tPC> parametros )* )? <tCP> 
-parametros ::= clase_parametros tipo_variables lista_parametros   
-clase_parametros ::= ( <tVAL> | <tREF> ) 
-parametro ::= <tIDENTIFICADOR> parametro_vector
-parametro_vector ::= <tAV> <tVALORENTERO> <tCV> | /*epsilon*/
-lista_parametros ::= parametro lista_parametrosRec
-lista_parametrosRec ::=  ( <tCOMA> parametro )* 
 
 
 
@@ -247,11 +285,7 @@ lista_parametrosRec ::=  ( <tCOMA> parametro )*
 
 
 
-
-
-
-
-
+/*
 void S () : 
 {
 
@@ -310,5 +344,5 @@ void S () :
   )+
   < EOF >
 }
-
+*/
 
