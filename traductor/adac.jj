@@ -257,10 +257,14 @@ void clase_parametros():
 void lista_parametros():
 {}
 {
-    parametro() ( <tCOMA> parametro() )*
+    parametro() lista_parametrosRec()
 }
 /*lista_parametrosRec ::=  ( <tCOMA> parametro )* */
-
+void lista_parametrosRec():
+{}
+{
+    ( <tCOMA> parametro() )*
+}
  /*parametro := <tIDENTIFICADOR> parametro_vector*/
  void parametro():
  {}
@@ -274,8 +278,6 @@ void lista_parametros():
  {
    <tAV> <tVALORENTERO> <tCV>
 }
- //void epsilon():{ System.out.prntln("epsilon"); }{ System.out.prntln("epsilon"); }
-
 
 
 
