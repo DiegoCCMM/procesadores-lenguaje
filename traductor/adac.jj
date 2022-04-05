@@ -131,8 +131,8 @@ TOKEN : /* Valores */
 
    <tVALORENTERO : (<DIGITO>)+>                     {infoLexico(matchedToken,"valor entero");}
 |   <tVALORBOOLEANO : ("true"| "false")>        {infoLexico(matchedToken,"valor booleano");}
-|   <tVALORCHAR : ("\"")~["\""]("\"")>        {infoLexico(matchedToken,"valor caracter");}
-|   <tVALORCADENA : ("\"")~["\""](~["\""])+("\"")>  {infoLexico(matchedToken,"valor cadena");}
+|   <tVALORCHAR : ("'")~["'"]("'")>        {infoLexico(matchedToken,"valor caracter");}
+|   <tVALORCADENA : ("\"")(~["\""])*("\"")>  {infoLexico(matchedToken,"valor cadena");}
 }
 
 
