@@ -7,36 +7,69 @@
 PARSER_BEGIN(adac)
 package traductor;
 
-public class adac {
-  static void errorLexico(Token t) {
-    System.out.println("ERROR LÉXICO (" + SimpleCharStream.getBeginLine() +
-                ", " + SimpleCharStream.getBeginColumn() + "): símbolo no reconocido: <" +
-                SimpleCharStream.GetImage().charAt(adacTokenManager.curLexState) + ">");
 
-  }
-  
-    public static void main(String[] args) {
-      adac parser;
-      try {
-        if(args.length == 0) { //entrada desde stdin
+
+public class adac {
+
+  public static void main(String [] args)
+  {
+    adac parser;
+    try
+    {
+      if (args.length == 0)
+      { //entrada desde stdin
         parser = new adac(System.in);
         System.out.println("Leyendo de la entrada estandar...");
       }
-      else { //entrada desde fichero en args[0]
-              parser = new adac(new java.io.FileInputStream(args[0])); 
+      else
+      { //entrada desde fichero en args[0]
+        parser = new adac(new java.io.FileInputStream(args [0]));
       }
       parser.programa(); //invoca simbolo inicial de la gramÃƒÆ’Ã‚Â¡tica
     }
     catch (java.io.FileNotFoundException e) {
-      System.err.println ("Fichero " + args[0] + " no encontrado.");
+      System.err.println("Fichero " + args [0] + " no encontrado.");
     }
-    catch (TokenMgrError e) {
-          errorLexico(token);
-        }
-        catch (ParseException e) {
-          System.err.println("SINT_ERROR: " + e.getMessage());
-        } 
+    catch (TokenMgrError e)    {
+      errorLexico(token);
     }
+    catch(ParseException e) {
+		errorSintactico(e);	
+    }
+  }
+
+  static void errorLexico(Token t) {
+    System.out.println("ERROR L\u00c9XICO (" + SimpleCharStream.getBeginLine() + 
+    ", " + SimpleCharStream.getBeginColumn() + "): s\u00edmbolo no reconocido: <" + 
+    SimpleCharStream.GetImage().charAt(adacTokenManager.curLexState) + ">");
+  }
+
+
+  static void errorSintactico(ParseException e){
+    String msg ="ERROR SINTÁCTICO (" + e.currentToken.next.beginLine + ", " + e.currentToken.next.beginColumn
+     + "): encontrado: <" + e.currentToken.next.image + "> Se esperaba:  ";
+     for(int i=0; i< e.expectedTokenSequences.length; i++) {
+		msg+="  " + e.tokenImage[e.expectedTokenSequences[i][0]];
+     }
+    System.out.println(msg);
+  }
+
+  static void panic_mode(int kind) {
+    Token t = adac.getNextToken();
+    while (token.kind != kind && token.kind != EOF)
+    {
+      token = adac.getNextToken();
+    }
+    String error_msg = "PANIC MODE (<" + t.beginLine + ", " + 
+    t.beginColumn + ">) : ignorando entrada hasta ";
+    if (kind == tEND) 
+    error_msg += " [end]";
+    else 
+    error_msg += " [;]";
+    System.out.println(error_msg);
+  }
+
+
 }
 PARSER_END(adac)
 
@@ -159,7 +192,11 @@ void programa():
 void declaracion_variables():
 {}
 {
-   ( declaracion() <tPC> )*
+   try {
+     ( declaracion() <tPC> )*
+ }catch(ParseException e) {
+	panic_mode(tPC);
+ }
 }
 
 /*declaracion ::= tipo_variables lista_vars */
@@ -173,7 +210,8 @@ void declaracion():
 void tipo_variables():
 {}
 {
-   <tINT> | <tCHAR> | <tBOOL>
+  	<tINT> | <tCHAR> | <tBOOL>
+
 }
  /*lista_vars := variable ( <tCOMA> variable )* */
  void lista_vars():
@@ -291,7 +329,7 @@ void parametro_vector() :
 }
 /***BLOQUE SENTENCIAS**/
 
-/*bloque_sentencias ::= <tBEGIN> lista_sentencias <tEND>*/
+/*bloque_sentencias ::= <tBEGIN> lista_sentencias <tEND>*/ /*TODO: usar panic mode??*/
 void bloque_sentencias() :
 {}
 {
@@ -311,15 +349,19 @@ void lista_sentencias() :
 void sentencia() :
 {}
 {
-  leer() <tPC>
-| skip_linea() <tPC>	 //coge toda la entrada hasta \n
-| escribir() <tPC>
-| escribir_linea() <tPC>
-| LOOKAHEAD(2) invocacion_procedimiento()
-| LOOKAHEAD(2) asignacion() <tPC>
-| seleccion()
-| mientras_que()
-| <tRETURN> expresion() <tPC>
+  try { 
+	  leer() <tPC>
+	| skip_linea() <tPC>	 //coge toda la entrada hasta \n
+	| escribir() <tPC>
+	| escribir_linea() <tPC>
+	| LOOKAHEAD(2) invocacion_procedimiento()
+	| LOOKAHEAD(2) asignacion() <tPC>
+	| seleccion()
+	| mientras_que()
+	| <tRETURN> expresion() <tPC>
+	}catch(ParseException e) {
+	  panic_mode(tPC);
+	}
 }
 
 void leer() :
@@ -420,7 +462,11 @@ void var_vector() :
 void invocacion_procedimiento() : /*IMPORTANTE TIENE QUE SER PROCEDIMIENTO EN EL SEMANTICO*/
 {}
 {
-  <tID> argumentos() <tPC>
+	  try { 
+	  	<tID> argumentos() <tPC>
+	  }catch(ParseException e) {
+		  panic_mode(tPC);
+	  }
 }
 
 /*argumentos ::= <tAP> ( lista_expresiones )? <tCP> */
@@ -441,18 +487,26 @@ void lista_expresiones() :
 void seleccion() :
 {}
 {
-  <tIF> expresion() <tTHEN> lista_sentencias()
-  (
-    <tELSE> lista_sentencias()
-  )?
-  <tEND> /*REVISAR*/
+  try { 
+	  <tIF> expresion() <tTHEN> lista_sentencias()
+	  (
+	    <tELSE> lista_sentencias()
+	  )?
+	  <tEND> /*REVISAR*/
+	}catch(ParseException e) {
+	  panic_mode(tEND);
+	}
 }
 
 /*mientras_que ::= <tWHILE> expresion <tDO> lista_sentencias <tEND>*/
 void mientras_que() :
 {}
 {
-  <tWHILE> expresion() <tDO> lista_sentencias() <tEND>
+  try { 
+  	<tWHILE> expresion() <tDO> lista_sentencias() <tEND>
+  }catch(ParseException e) {
+	  panic_mode(tEND);
+  }
 }
 
 /*expresion := expresion_simple() (operador_relacional() expresion_simple())?*/
@@ -510,17 +564,8 @@ void operador_multiplicativo() :
 | <tAND>
 }
 
-/*factor := <tNOT> factor
-| <tAP> expresion <tCP>
-| <tINT2CHAR> <tAP> expresion <tCP>
-| <tCHAR2INT> <tAP> expresion <tCP>
-| <tID> accion_o_vector
-| <tCONST_INT>
-| <tCONST_CHAR>
-| <tCONST_STRING>
-| <tTRUE>
-| <tFALSE>
-*/
+/*factor := <tNOT> factor | <tAP> expresion <tCP> | <tINT2CHAR> <tAP> expresion <tCP> | <tCHAR2INT> <tAP> expresion <tCP>
+| <tID> accion_o_vector | <tCONST_INT>| <tCONST_CHAR>| <tCONST_STRING>| <tTRUE>| <tFALSE>*/
 
 void factor() :
 {}
@@ -551,65 +596,4 @@ void lista_uno_o_mas_exps() :
   expresion() (<tCOMA> expresion() )* 
 }
 
-
-/*
-void S () : 
-{
-
-}
-{
-
-  (
-    <tAND>
-  | <tOR>
-  | <tNOT>
-  | <tMOD>
-  | <tDIV>
-  | <tMAYOR>
-  | <tMENOR>
-  | <tIGUAL>
-  | <tMAI>
-  | <tMEI>
-  | <tNI>
-  | <tOPAS>
-  | <tSUMA>
-  | <tRESTA>
-  | <tMUL>
-  | <tPROCEDURE>
-  | <TFUNCTION>
-  | <tRETURN>
-  | <tVAL>
-  | <tREF>
-  | <tIS>
-  | <tBEGIN>
-  | <tEND>
-  | <tIF>
-  | <tTHEN>
-  | <tELSE>
-  | <tWHILE>
-  | <tPUT_L>
-  | <tPUT>
-  | <tGET>
-  | <tINT>
-  | <tBOOL>
-  | <tCHAR>
-  | <tTRUE>
-  | <tFALSE>
-  | <tINT2CHAR>
-  | <tID>
-  | <tVALORENTERO>
-  | <tVALORBOOLEANO>
-  | <tVALORCHAR>
-  | <tVALORCADENA>
-  | <tPC>
-  | <tCOMA>
-  | <tAP> 
-  | <tCP> 
-  | <tAV> 
-  | <tCV> 
-
-  )+
-  <EOF>
-}
-*/
 

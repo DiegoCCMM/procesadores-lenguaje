@@ -38,3 +38,4 @@ lib*
 
 .classpath
 .project
+bin/*
