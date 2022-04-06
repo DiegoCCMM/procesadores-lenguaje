@@ -11,7 +11,7 @@ package traductor;
 
 public class adac {
 
-  public static void main(String [] args)
+  public static void main(String [] args) 
   {
     adac parser;
     try
@@ -25,7 +25,7 @@ public class adac {
       { //entrada desde fichero en args[0]
         parser = new adac(new java.io.FileInputStream(args [0]));
       }
-      parser.programa(); //invoca simbolo inicial de la gramÃƒÂ¡tica
+      parser.programa(); //invoca simbolo inicial de la gramatica
     }
     catch (java.io.FileNotFoundException e) {
       System.err.println("Fichero " + args [0] + " no encontrado.");
@@ -33,14 +33,15 @@ public class adac {
     catch (TokenMgrError e)    {
       errorLexico(token);
     }
-    catch(ParseException e) {
-		errorSintactico(e);	
-    }
+    catch(ParseException e) {      	
+		//errorSintactico(e);
+   }
+   System.out.println("FIN");
   }
 
   static void errorLexico(Token t) {
-    System.out.println("ERROR L\u00c9XICO (" + SimpleCharStream.getBeginLine() + 
-    ", " + SimpleCharStream.getBeginColumn() + "): s\u00edmbolo no reconocido: <" + 
+    System.err.println("ERROR L�XICO (" + SimpleCharStream.getBeginLine() + 
+    ", " + SimpleCharStream.getBeginColumn() + "): s�mbolo no reconocido: <" + 
     SimpleCharStream.GetImage().charAt(adacTokenManager.curLexState) + ">");
   }
 
@@ -51,7 +52,7 @@ public class adac {
      for(int i=0; i< e.expectedTokenSequences.length; i++) {
 		msg+="  " + e.tokenImage[e.expectedTokenSequences[i][0]];
      }
-    System.out.println(msg);
+    System.err.println(msg);
   }
 
   static void panic_mode(int kind) {
@@ -62,11 +63,12 @@ public class adac {
     }
     String error_msg = "PANIC MODE (<" + t.beginLine + ", " + 
     t.beginColumn + ">) : ignorando entrada hasta ";
-    if (kind == tEND) 
-    error_msg += " [end]";
-    else 
-    error_msg += " [;]";
-    System.out.println(error_msg);
+    if (kind == tEND) { 
+    	error_msg += " [end]";
+  	}else {  
+   		 error_msg += " [;]";
+	}	
+    System.err.println(error_msg);
   }
 
 
@@ -75,10 +77,9 @@ PARSER_END(adac)
 
 TOKEN_MGR_DECLS: {
   
-static void infoLexico(Token t,String nombre) {
-  System.out.println("("+ t.beginLine+","+t.beginColumn+"): " + nombre +" \""+ t.image+"\"");
-}
-
+	static void infoLexico(Token t,String nombre) {
+	  System.out.println("("+ t.beginLine+","+t.beginColumn+"): " + nombre +" \""+ t.image+"\"");
+	}
 
 }
 
@@ -196,6 +197,7 @@ void declaracion_variables():
      ( declaracion() <tPC> )*
  }catch(ParseException e) {
 	panic_mode(tPC);
+	errorSintactico(e);
  }
 }
 
@@ -203,146 +205,203 @@ void declaracion_variables():
 void declaracion():
 {}
 {
-  tipo_variables() lista_vars()
+  try { 
+  	tipo_variables() lista_vars()
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*tipo_variables ::= ( <tINT> | <tCHAR> | <tBOOL> ) */
 void tipo_variables():
 {}
 {
+  try { 
   	<tINT> | <tCHAR> | <tBOOL>
-
+	 }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
  /*lista_vars := variable ( <tCOMA> variable )* */
  void lista_vars():
  {}
  {
+   try { 
    variable() ( <tCOMA> variable() )*
+    }catch(ParseException e) {
+	errorSintactico(e);
+ }
  }
  
  /*variable := <tID> variable_vector*/
  void variable():
  {}
  {
+   try { 
    <tID> (variable_vector())? /*podemos utilizar solo <tAV> <tVALORENTERO> <tCV> */
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
  }
  
  /*variable_vector ::= <tAV> <tVALORENTERO> <tCV> | epsilon */
  void variable_vector():
  {}
  {
+   try { 
    <tAV> <tVALORENTERO> <tCV>
+  }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /***DECLARACION DE ACCIONES****/
 /*declaracion_acciones ::= ( declaracion_accion )* */
 void declaracion_acciones() :
 {}
-{
+{try { 
   (declaracion_accion())*
+   }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*declaracion_accion ::= declaracion_funcion | declaracion_proc */
 void declaracion_accion() :
 {}
 {
+  try { 
   declaracion_funcion() | declaracion_proc()
+   }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*declaracion_funcion ::= cabecera_funcion declaracion_variables bloque_sentencias*/
 void declaracion_funcion() :
 {}
 {
+	try { 
   cabecera_funcion() declaracion_variables() bloque_sentencias()
+   }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*cabecera_funcion ::= <tFUNCTION> tipo_variables <tID> parametros_formales <tIS>*/
 void cabecera_funcion() :
 {}
 {
+  try { 
   <tFUNCTION> tipo_variables() <tID> parametros_formales() <tIS>
+   }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*declaracion_proc ::= cabecera_proc declaracion_variables bloque_sentencias*/
 void declaracion_proc() :
 {}
-{
+{ try{
   cabecera_proc() declaracion_variables() bloque_sentencias()
+   }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*cabecera_proc ::= <tPROCEDURE> <tID> parametros_formales <tIS>*/
 void cabecera_proc() :
 {}
-{
+{ try{
   <tPROCEDURE> <tID> parametros_formales() <tIS>
+   }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*parametros_formales ::= <tAP> ( parametros ( <tPC> parametros )* )? <tCP> */
 void parametros_formales() :
 {}
-{
+{ try{
   <tAP> (parametros() (<tPC> parametros() )* )? <tCP>
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*parametros ::= clase_parametros tipo_variables lista_parametros   */
 void parametros() :
 {}
-{
+{ try{
   clase_parametros() tipo_variables() lista_parametros()
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 void clase_parametros() :
 {}
-{
+{ try{
   <tVAL>
 | <tREF>
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*lista_parametros ::= parametro lista_parametrosRec*/
 void lista_parametros() :
 {}
-{
+{ try{
   parametro() (<tCOMA> parametro())* /* lista_parametrosRec() */
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
-/*lista_parametrosRec ::=  ( <tCOMA> parametro )* 
-void lista_parametrosRec() :
-{}
-{
-  (<tCOMA> parametro())*
-}
-*/
 
 /*parametro := <tID> parametro_vector*/
 void parametro() :
 {}
-{
+{ try{
   <tID> (parametro_vector())?
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*parametro_vector ::= <tAV> <tVALORENTERO> <tCV> */
 /*IGUAL QUE VARIABLE VECTOR-- ¿ELIMINAR?*/
 void parametro_vector() :
 {}
-{
+{ try{
   <tAV> <tVALORENTERO> <tCV>
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 /***BLOQUE SENTENCIAS**/
 
-/*bloque_sentencias ::= <tBEGIN> lista_sentencias <tEND>*/ /*TODO: usar panic mode??*/
+/*bloque_sentencias ::= <tBEGIN> lista_sentencias <tEND>*/ 
 void bloque_sentencias() :
 {}
-{
+{ try{
   <tBEGIN> lista_sentencias() <tEND>
+   }catch(ParseException e) {
+     panic_mode(tEND);
+	errorSintactico(e);
+ }
 }
 
 /*lista_sentencias ::= sentencia**/
 void lista_sentencias() :
 {}
-{
+{ try{
   (sentencia())+ //una o mas sentencias
-|
-  {}
+  |  {}
+   }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*lista_sentencias ::= sentencia**/
@@ -361,101 +420,141 @@ void sentencia() :
 	| <tRETURN> expresion() <tPC>
 	}catch(ParseException e) {
 	  panic_mode(tPC);
+	  errorSintactico(e);
 	}
 }
 
 void leer() :
 {}
-{
+{ try{
   <tGET> <tAP> lista_asignables() <tCP>
+ }catch(ParseException e) {
+	errorSintactico(e);
+}
 }
 
 /*lista_asignables() := (< tID >) lista_asignablesRec */
 void lista_asignables() : //se puede sustituir por variable
 {}
-{
+{ try{
   <tID> (asignable_vector() )? lista_asignablesRec()
+   }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 /*lista_asignablesRec ::= (asignable_vector)* */
 void lista_asignablesRec() : //se puede sustituir por variable
 {}
-{
+{ try{
   (<tID> (asignable_vector())?)*
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 /*asignable_vector ::= <tAV> expresion <tCV> */
 void asignable_vector() :
 {}
-{
+{ try{
   <tAV> expresion() <tCV>
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*skip_linea ::= <tSKIP_L> <tAP> <tCP>*/
 void skip_linea() :
 {}
-{
+{ try{
   <tSKIP_L> <tAP> <tCP>
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*escribir ::= <tPUT> <tAP> lista_escribibles <tCP>*/
 void escribir() :
 {}
-{
+{ try{
   <tPUT> <tAP> lista_escribibles() <tCP>
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*escribir_linea ::= <tPUT_L> <tAP> lista_escribibles <tCP>*/
 void escribir_linea() :
 {}
-{
+{ try{
   <tPUT_L> <tAP> cero_o_lista_escribibles() <tCP>
   /* Se podria sustituir cero_o_lista_escribibles por (lista_escribibles())* */
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*cero_o_lista_escribibles ::= lista_escribibles() | epsilon */
 void cero_o_lista_escribibles() :
 {}
-{
+{ try{
   lista_escribibles()
-| {}
-/*DEFINIR CADENA VACIA*/
+	| {}
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 
 }
 
 /*lista_escribibles ::=   expresion | <tVALORCHAR> | <tVALORCADENA> */
 void lista_escribibles() : //1 o mÃ¡s escribibles
-{}
-{
+{ }
+
+{ try{
   (expresion()) lista_escribiblesRec()
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /* lista_escribiblesRec ::= (<tCOMA> (expresion | <tVALORCHAR> | <tVALORCADENA> ) )* */
 void lista_escribiblesRec() :
 {}
-{
+{ try{
   (<tCOMA> expresion())*
+   }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*asignacion ::= var_asignacion <tOPAS> expresion*/
 void asignacion() :
 {}
-{
+{ try{
   var_asignacion() <tOPAS> expresion()
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*var_asignacion ::= <tIDENTIFICADOR> var_Vector*/
 void var_asignacion() :
 {}
-{
+{ try{
   <tID> var_vector()
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*var_vector ::= <tAV> expresion <tCV> | epsilon */
 void var_vector() :
 {}
-{
+{ try{
   <tAV> expresion() <tCV>
 |
   {} /*epsilon*/
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*invocacion_procedimiento ::= <tID> argumentos <tPC> */
@@ -466,27 +565,34 @@ void invocacion_procedimiento() : /*IMPORTANTE TIENE QUE SER PROCEDIMIENTO EN EL
 	  	<tID> argumentos() <tPC>
 	  }catch(ParseException e) {
 		  panic_mode(tPC);
+		  errorSintactico(e);
 	  }
 }
 
 /*argumentos ::= <tAP> ( lista_expresiones )? <tCP> */
 void argumentos() :
 {}
-{
+{ try{
   <tAP> (lista_expresiones())? <tCP> 
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*lista_expresiones ::= expresion (<tCOMA> expresion)* */
 void lista_expresiones() :
 {}
-{
+{ try{
   expresion() (<tCOMA> expresion())*
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*seleccion ::= <tIF> expresion <tTHEN> lista_sentencias (<tELSE> lista_sentencias)? <tEND>*/
 void seleccion() :
 {}
-{
+{ 
   try { 
 	  <tIF> expresion() <tTHEN> lista_sentencias()
 	  (
@@ -495,6 +601,7 @@ void seleccion() :
 	  <tEND> /*REVISAR*/
 	}catch(ParseException e) {
 	  panic_mode(tEND);
+	  errorSintactico(e);
 	}
 }
 
@@ -506,62 +613,83 @@ void mientras_que() :
   	<tWHILE> expresion() <tDO> lista_sentencias() <tEND>
   }catch(ParseException e) {
 	  panic_mode(tEND);
+	  errorSintactico(e);
   }
 }
 
 /*expresion := expresion_simple() (operador_relacional() expresion_simple())?*/
 void expresion() :
 {}
-{
+{ try{
   expresion_simple()
   (
     operador_relacional() expresion_simple()
   )?
+   }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*operador_relacional : <tIGUAL> | <tMENOR> | <tMAYOR> | <tMEI> | <tMAI> | <tNI> */
 void operador_relacional() :
 {}
-{
+{ try{
   <tIGUAL>
 | <tMENOR>
 | <tMAYOR>
 | <tMEI>
 | <tMAI>
 | <tNI>
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /* expresion_simple : ( <tSUMA> | <tRESTA> )? termino ( operador_aditivo termino )* */
 void expresion_simple() :
 {}
-{
+{ try{
   (<tSUMA> | <tRESTA> )? termino() (operador_aditivo() termino() )*
+   }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /* operador_aditivo :=  <tSUMA>| <tRESTA>| <tOR>*/ 
 void operador_aditivo() :
 {}
-{
+{ try{
   <tSUMA>
 | <tRESTA>
 | <tOR>
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*termino := factor ( operador_multiplicativo factor )* */
 void termino() :
 {}
 {
+  try{
   factor() (operador_multiplicativo() factor() )* 
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*operador_multiplicativo :=  <tMUL>| <tMOD>| <tDIV>| <tAND>*/
 void operador_multiplicativo() :
 {}
 {
+  try{
   <tMUL>
 | <tMOD>
 | <tDIV>
 | <tAND>
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*factor := <tNOT> factor | <tAP> expresion <tCP> | <tINT2CHAR> <tAP> expresion <tCP> | <tCHAR2INT> <tAP> expresion <tCP>
@@ -570,6 +698,7 @@ void operador_multiplicativo() :
 void factor() :
 {}
 {
+  try{
   <tNOT> factor()
 | <tAP> expresion() <tCP>
 | <tINT2CHAR> <tAP> expresion() <tCP>
@@ -580,20 +709,31 @@ void factor() :
 | <tVALORCADENA>
 | <tTRUE>
 | <tFALSE>
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*funcion_o_vector := <tAP> lista_cero_o_mas_exps <tCP> | <tAV> expresion <tCV> | /*epsilon* */
 void funcion_o_vector() :
 {}
 {
+  try{
   <tAP> (lista_uno_o_mas_exps() )? <tCP> | <tAV> expresion() <tCV> | {} /*epsilon*/
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 /*lista_uno_o_mas_exps:= expresion() (<tCOMA> expresion())* */
 void lista_uno_o_mas_exps() :
 {}
 {
+  try{
   expresion() (<tCOMA> expresion() )* 
+ }catch(ParseException e) {
+	errorSintactico(e);
+ }
 }
 
 
