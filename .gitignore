@@ -34,7 +34,7 @@ build.xml
 
 dist/*
 jcc_files/*
-lib*
+
 
 .classpath
 .project
