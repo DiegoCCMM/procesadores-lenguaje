@@ -1,17 +1,23 @@
  options {
    IGNORE_CASE = true;
    COMMON_TOKEN_ACTION = false;
-   DEBUG_PARSER = false;
+   DEBUG_PARSER = true;
 }
 
 PARSER_BEGIN(adac)
 package traductor;
 
-
+import traductor.Token;
+import lib.attributes.*;
+import lib.symbolTable.*;
+import lib.symbolTable.exceptions.*;
+import lib.errores.*;
 
 public class adac {
 
-  public static void main(String [] args) 
+    SymbolTable tabla_simbolos = SymbolTable();
+
+    public static void main(String [] args)
   {
     adac parser;
     try
@@ -40,14 +46,14 @@ public class adac {
   }
 
   static void errorLexico(Token t) {
-    System.err.println("ERROR LÉXICO (" + SimpleCharStream.getBeginLine() + 
-    ", " + SimpleCharStream.getBeginColumn() + "): símbolo no reconocido: <" + 
+    System.err.println("ERROR Lï¿½XICO (" + SimpleCharStream.getBeginLine() + 
+    ", " + SimpleCharStream.getBeginColumn() + "): sï¿½mbolo no reconocido: <" + 
     SimpleCharStream.GetImage().charAt(adacTokenManager.curLexState) + ">");
   }
 
 
   static void errorSintactico(ParseException e){
-    String msg ="ERROR SINTÁCTICO (" + e.currentToken.next.beginLine + ", " + e.currentToken.next.beginColumn
+    String msg ="ERROR SINTï¿½CTICO (" + e.currentToken.next.beginLine + ", " + e.currentToken.next.beginColumn
      + "): encontrado: <" + e.currentToken.next.image + "> Se esperaba:  ";
      for(int i=0; i< e.expectedTokenSequences.length; i++) {
 		msg+="  " + e.tokenImage[e.expectedTokenSequences[i][0]];
@@ -185,7 +191,7 @@ TOKEN : /*Separadores*/
 void programa():
 { }
 {
-  <tPROCEDURE> <tID> <tIS> declaracion_variables() declaracion_acciones()  bloque_sentencias() <EOF>
+  <tPROCEDURE> <tID> <tIS> {tabla_simbolos.insertBlock();} declaracion_variables() declaracion_acciones()  bloque_sentencias() <EOF>
 }
 
 /***DECLARACION DE VARIABLES***/
@@ -203,53 +209,74 @@ void declaracion_variables():
 
 /*declaracion ::= tipo_variables lista_vars */
 void declaracion():
-{}
+{Symbol.Types tipo_variable;}
 {
   try { 
-  	tipo_variables() lista_vars()
+  	tipo_variable = tipo_variables() lista_vars(tipo_variable)
  }catch(ParseException e) {
 	errorSintactico(e);
  }
 }
 
 /*tipo_variables ::= ( <tINT> | <tCHAR> | <tBOOL> ) */
-void tipo_variables():
+Symbol.Types tipo_variables():
 {}
 {
   try { 
-  	<tINT> | <tCHAR> | <tBOOL>
+  	<tINT>
+  	{
+  	    return(Symbol.Types.INT);
+  	}
+  	| <tCHAR>
+  	{
+  	    return(Symbol.Types.CHAR);
+  	}
+  	| <tBOOL>
+  	{
+  	    return(Symbol.Types.BOOL);
+  	}
 	 }catch(ParseException e) {
 	errorSintactico(e);
  }
 }
  /*lista_vars := variable ( <tCOMA> variable )* */
- void lista_vars():
+ void lista_vars(Symbol.Types tipo_variable):
  {}
  {
    try { 
-   variable() ( <tCOMA> variable() )*
+   variable(tipo_variable) ( <tCOMA> variable(tipo_variable) )*
     }catch(ParseException e) {
 	errorSintactico(e);
  }
  }
  
  /*variable := <tID> variable_vector*/
- void variable():
- {}
+ void variable(Symbol.Types tipo_variable):
+ {Token t; int tamanyo_vector = 0;}
  {
    try { 
-   <tID> (variable_vector())? /*podemos utilizar solo <tAV> <tVALORENTERO> <tCV> */
+   t = <tID> (tamanyo_vector = variable_vector())? /*podemos utilizar solo <tAV> <tVALORENTERO> <tCV> */
+   {
+        try{
+            insertar_simbolo_declaracion(tabla_simbolos, t, tipo_variable, tamanyo_vector);
+        }catch(AlreadyDefinedSymbolException e){
+            System.out.println(e.getMEssage());
+        }
+   }
  }catch(ParseException e) {
 	errorSintactico(e);
  }
  }
  
  /*variable_vector ::= <tAV> <tVALORENTERO> <tCV> | epsilon */
- void variable_vector():
- {}
+ int variable_vector():
+ {Token t;}
  {
    try { 
-   <tAV> <tVALORENTERO> <tCV>
+   <tAV> t = <tVALORENTERO> <tCV>
+   {
+        return(Integer.parseInt(t.image));
+   }
   }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -415,6 +442,7 @@ void sentencia() :
 	| escribir_linea() <tPC>
 	| LOOKAHEAD(2) invocacion_procedimiento()
 	| LOOKAHEAD(2) asignacion() <tPC>
+	| declaracion_accion() <tPC>
 	| seleccion()
 	| mientras_que()
 	| <tRETURN> expresion() <tPC>
