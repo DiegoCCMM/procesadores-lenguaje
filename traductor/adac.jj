@@ -1,21 +1,22 @@
  options {
    IGNORE_CASE = true;
    COMMON_TOKEN_ACTION = false;
-   DEBUG_PARSER = true;
+   DEBUG_PARSER = false;
 }
 
 PARSER_BEGIN(adac)
 package traductor;
 
-import traductor.Token;
-import lib.attributes.*;
-import lib.symbolTable.*;
+import lib.symbolTable.SymbolTable;
+import lib.symbolTable.Symbol;
 import lib.symbolTable.exceptions.*;
 import lib.errores.*;
+import lib.tools.*;
 
 public class adac {
 
-    SymbolTable tabla_simbolos = SymbolTable();
+   static SymbolTable tabla_simbolos = new SymbolTable();
+   static  SemanticFunctions SemFunc = new SemanticFunctions();
 
     public static void main(String [] args)
   {
@@ -42,6 +43,7 @@ public class adac {
     catch(ParseException e) {      	
 		//errorSintactico(e);
    }
+  System.out.println(tabla_simbolos.toString());
    System.out.println("FIN");
   }
 
@@ -84,7 +86,7 @@ PARSER_END(adac)
 TOKEN_MGR_DECLS: {
   
 	static void infoLexico(Token t,String nombre) {
-	  System.out.println("("+ t.beginLine+","+t.beginColumn+"): " + nombre +" \""+ t.image+"\"");
+	//  System.out.println("("+ t.beginLine+","+t.beginColumn+"): " + nombre +" \""+ t.image+"\"");
 	}
 
 }
@@ -258,9 +260,9 @@ Symbol.Types tipo_variables():
    t = <tID> (tamanyo_vector = variable_vector())? /*podemos utilizar solo <tAV> <tVALORENTERO> <tCV> */
    {
         try{
-            insertar_simbolo_declaracion(tabla_simbolos, t, tipo_variable, tamanyo_vector);
+            SemFunc.insertar_simbolo_declaracion(tabla_simbolos, t, tipo_variable, tamanyo_vector);
         }catch(AlreadyDefinedSymbolException e){
-            System.out.println(e.getMEssage());
+            System.out.println(e.getMessage());
         }
    }
  }catch(ParseException e) {

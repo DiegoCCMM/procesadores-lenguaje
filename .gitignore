@@ -39,3 +39,4 @@ jcc_files/*
 .classpath
 .project
 bin/*
+/bin/
