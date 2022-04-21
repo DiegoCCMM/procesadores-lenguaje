@@ -24,14 +24,13 @@ public class SemanticFunctions {
     }
 
     public static void insertar_simbolo_declaracion(SymbolTable tabla_simbolos, Token token_simbolo, Symbol.Types tipo_simbolo,
-                                                    int tamanyo_vector) throws AlreadyDefinedSymbolException {
+                                                    Integer tamanyo_vector) throws AlreadyDefinedSymbolException {
         Symbol simbolo_a_insertar = null;
         String nombre_simbolo = token_simbolo.image;
 
-        if (tamanyo_vector > 0) {
+        if (tamanyo_vector != null && tamanyo_vector > 0) {
             simbolo_a_insertar = new SymbolArray(nombre_simbolo, 0, tamanyo_vector - 1, tipo_simbolo);
-        //TODO VALOR 0 ES LA INICIALIZACIÓN
-        } else if (tamanyo_vector < 0) {
+        } else if (tamanyo_vector != null && tamanyo_vector < 0) {
             ErrorSemantico.deteccion("el tamaño del vector tiene que ser mayor que 0", token_simbolo);
 
         } else if (tipo_simbolo == Symbol.Types.CHAR) {
@@ -47,14 +46,12 @@ public class SemanticFunctions {
     }
 
     public static Symbol insertar_parametro(SymbolTable tabla_simbolos, Token token_simbolo, Symbol.Types tipo_simbolo,
-                                            int tamanyo_vector, Symbol.ParameterClass clase_simbolo) throws AlreadyDefinedSymbolException {
+                                            Integer tamanyo_vector, Symbol.ParameterClass clase_simbolo) throws AlreadyDefinedSymbolException {
         Symbol simbolo_a_insertar = null;
         String nombre_simbolo = token_simbolo.image;
-
-        if (tamanyo_vector > 0) {
+        if (tamanyo_vector != null && tamanyo_vector > 0) {
             simbolo_a_insertar = new SymbolArray(nombre_simbolo, 0, tamanyo_vector - 1, tipo_simbolo, clase_simbolo);
-        //TODO VALOR 0 ES LA INICIALIZACIÓN
-        } else if (tamanyo_vector < 0) {
+        } else if (tamanyo_vector != null && tamanyo_vector <= 0) {
             ErrorSemantico.deteccion("el tamaño del vector tiene que ser mayor que 0", token_simbolo);
 
         } else if (tipo_simbolo == Symbol.Types.CHAR) {

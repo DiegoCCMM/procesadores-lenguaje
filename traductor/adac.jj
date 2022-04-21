@@ -255,7 +255,7 @@ Symbol.Types tipo_variables():
  
  /*variable := <tID> declaracion_vector*/
  void variable(Symbol.Types tipo_variable):
- {Token t; int tamanyo_vector = 0;}
+ {Token t; Integer tamanyo_vector = null;}
  {
    try { 
    t = <tID> (tamanyo_vector = declaracion_vector())? /*podemos utilizar solo <tAV> <tVALORENTERO> <tCV> */
@@ -412,10 +412,9 @@ void lista_parametros(Symbol.Types tipo_parametro, Symbol.ParameterClass clase_p
  }
 }
 
-
 /*parametro := <tID> parametro_vector*/
 void parametro(Symbol.Types tipo_parametro, Symbol.ParameterClass clase_parametro, Symbol simbolo_funcion) :
-{Token t; int tamanyo_vector = 0; Symbol parametro = null;}
+{Token t; Integer tamanyo_vector = null; Symbol parametro = null;}
 { try{
   t = <tID> (tamanyo_vector = declaracion_vector())?
   {
