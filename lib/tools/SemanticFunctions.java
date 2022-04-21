@@ -30,7 +30,7 @@ public class SemanticFunctions {
 
         if (tamanyo_vector > 0) {
             simbolo_a_insertar = new SymbolArray(nombre_simbolo, 0, tamanyo_vector - 1, tipo_simbolo);
-
+        //TODO VALOR 0 ES LA INICIALIZACIÓN
         } else if (tamanyo_vector < 0) {
             ErrorSemantico.deteccion("el tamaño del vector tiene que ser mayor que 0", token_simbolo);
 
@@ -53,7 +53,7 @@ public class SemanticFunctions {
 
         if (tamanyo_vector > 0) {
             simbolo_a_insertar = new SymbolArray(nombre_simbolo, 0, tamanyo_vector - 1, tipo_simbolo, clase_simbolo);
-
+        //TODO VALOR 0 ES LA INICIALIZACIÓN
         } else if (tamanyo_vector < 0) {
             ErrorSemantico.deteccion("el tamaño del vector tiene que ser mayor que 0", token_simbolo);
 

@@ -356,11 +356,15 @@ ArrayList<Symbol> parm_list = new ArrayList<>();
 SymbolProcedure simbolo_procedure;}
 { try{
   <tPROCEDURE> t = <tID>
-  {simbolo_procedure = new SymbolProcedure(t.image, parm_list); tabla_simbolos.insertBlock();}
+  {simbolo_procedure = new SymbolProcedure(t.image, parm_list);
+  tabla_simbolos.insertSymbol(simbolo_procedure);
+  tabla_simbolos.insertBlock();}
   parametros_formales(simbolo_procedure) <tIS>
    }catch(ParseException e) {
 	errorSintactico(e);
- }
+   }catch(AlreadyDefinedSymbolException e){
+        System.out.println(e.getMessage());
+   }
 }
 
 /*parametros_formales ::= <tAP> ( parametros ( <tPC> parametros )* )? <tCP> */
