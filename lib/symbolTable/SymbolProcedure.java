@@ -32,5 +32,8 @@ public class SymbolProcedure extends Symbol implements Cloneable {
     	newSymbolProcedure.parList = new ArrayList<Symbol> (parList); 
     	return newSymbolProcedure;
     }
-    
+
+    public void setParametro(Symbol parametro) {
+        parList.add(parametro);
+    }
 }

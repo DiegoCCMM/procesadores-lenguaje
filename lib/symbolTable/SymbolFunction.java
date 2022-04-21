@@ -7,7 +7,6 @@
 
 package lib.symbolTable;
 import java.util.*;
-import java.util.AbstractMap.SimpleEntry;
 
 public class SymbolFunction extends Symbol implements Cloneable {
     
@@ -35,5 +34,9 @@ public class SymbolFunction extends Symbol implements Cloneable {
     	SymbolFunction newSymbolFunction = (SymbolFunction) super.clone();
     	newSymbolFunction.parList = new ArrayList<Symbol> (parList); 
     	return newSymbolFunction; 
+    }
+
+    public void setParametro(Symbol parametro){
+        parList.add(parametro);
     }
 }

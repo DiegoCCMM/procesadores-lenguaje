@@ -31,6 +31,8 @@ abstract public class Symbol implements Cloneable {
     public boolean constant;
     public int nivel; //nivel dentro de la TS
 
+    public Symbol(){}
+
     public Symbol (String _name, Types _type) {
     	this (_name, -1, _type, ParameterClass.NONE, false); 
     }

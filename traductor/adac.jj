@@ -8,10 +8,11 @@ PARSER_BEGIN(adac)
 package traductor;
 
 import lib.symbolTable.SymbolTable;
-import lib.symbolTable.Symbol;
+import lib.symbolTable.*;
 import lib.symbolTable.exceptions.*;
 import lib.errores.*;
 import lib.tools.*;
+import java.util.*;
 
 public class adac {
 
@@ -252,12 +253,12 @@ Symbol.Types tipo_variables():
  }
  }
  
- /*variable := <tID> variable_vector*/
+ /*variable := <tID> declaracion_vector*/
  void variable(Symbol.Types tipo_variable):
  {Token t; int tamanyo_vector = 0;}
  {
    try { 
-   t = <tID> (tamanyo_vector = variable_vector())? /*podemos utilizar solo <tAV> <tVALORENTERO> <tCV> */
+   t = <tID> (tamanyo_vector = declaracion_vector())? /*podemos utilizar solo <tAV> <tVALORENTERO> <tCV> */
    {
         try{
             SemFunc.insertar_simbolo_declaracion(tabla_simbolos, t, tipo_variable, tamanyo_vector);
@@ -270,8 +271,8 @@ Symbol.Types tipo_variables():
  }
  }
  
- /*variable_vector ::= <tAV> <tVALORENTERO> <tCV> | epsilon */
- int variable_vector():
+ /*declaracion_vector ::= <tAV> <tVALORENTERO> <tCV> | epsilon */
+ int declaracion_vector():
  {Token t;}
  {
    try { 
@@ -319,13 +320,23 @@ void declaracion_funcion() :
 
 /*cabecera_funcion ::= <tFUNCTION> tipo_variables <tID> parametros_formales <tIS>*/
 void cabecera_funcion() :
-{}
+{Token t;
+ArrayList<Symbol> parametros_formales = new ArrayList<Symbol>();
+Symbol.Types tipo_func;
+SymbolFunction simbolo_funcion;}
 {
   try { 
-  <tFUNCTION> tipo_variables() <tID> parametros_formales() <tIS>
+  <tFUNCTION> tipo_func = tipo_variables() t = <tID>
+    {simbolo_funcion = new SymbolFunction(t.image, parametros_formales, tipo_func);
+    tabla_simbolos.insertSymbol(simbolo_funcion);
+    tabla_simbolos.insertBlock();
+    }
+  parametros_formales(simbolo_funcion) <tIS>
    }catch(ParseException e) {
 	errorSintactico(e);
- }
+   }catch(AlreadyDefinedSymbolException e){
+    System.out.println(e.getMessage());
+   }
 }
 
 /*declaracion_proc ::= cabecera_proc declaracion_variables bloque_sentencias*/
@@ -340,49 +351,58 @@ void declaracion_proc() :
 
 /*cabecera_proc ::= <tPROCEDURE> <tID> parametros_formales <tIS>*/
 void cabecera_proc() :
-{}
+{Token t;
+ArrayList<Symbol> parm_list = new ArrayList<>();
+SymbolProcedure simbolo_procedure;}
 { try{
-  <tPROCEDURE> <tID> parametros_formales() <tIS>
+  <tPROCEDURE> t = <tID>
+  {simbolo_procedure = new SymbolProcedure(t.image, parm_list); tabla_simbolos.insertBlock();}
+  parametros_formales(simbolo_procedure) <tIS>
    }catch(ParseException e) {
 	errorSintactico(e);
  }
 }
 
 /*parametros_formales ::= <tAP> ( parametros ( <tPC> parametros )* )? <tCP> */
-void parametros_formales() :
+void parametros_formales(Symbol simbolo_funcion) :
 {}
 { try{
-  <tAP> (parametros() (<tPC> parametros() )* )? <tCP>
+  <tAP> (parametros(simbolo_funcion) (<tPC> parametros(simbolo_funcion) )* )? <tCP>
  }catch(ParseException e) {
 	errorSintactico(e);
  }
 }
 
 /*parametros ::= clase_parametros tipo_variables lista_parametros   */
-void parametros() :
-{}
+void parametros(Symbol simbolo_funcion) :
+{Symbol.Types tipo_parametro;
+ Symbol.ParameterClass clase_parametro;
+}
 { try{
-  clase_parametros() tipo_variables() lista_parametros()
+  clase_parametro = clase_parametros() tipo_parametro = tipo_variables()
+  lista_parametros(tipo_parametro, clase_parametro, simbolo_funcion)
+
  }catch(ParseException e) {
 	errorSintactico(e);
  }
 }
 
-void clase_parametros() :
+Symbol.ParameterClass clase_parametros() :
 {}
 { try{
-  <tVAL>
-| <tREF>
+  <tVAL> {return(Symbol.ParameterClass.VAL);}
+| <tREF> {return(Symbol.ParameterClass.REF);}
  }catch(ParseException e) {
 	errorSintactico(e);
  }
 }
 
-/*lista_parametros ::= parametro lista_parametrosRec*/
-void lista_parametros() :
+/*lista_parametros ::= parametro (, parametro)**/
+void lista_parametros(Symbol.Types tipo_parametro, Symbol.ParameterClass clase_parametro, Symbol simbolo_funcion) :
 {}
 { try{
-  parametro() (<tCOMA> parametro())* /* lista_parametrosRec() */
+  parametro(tipo_parametro, clase_parametro, simbolo_funcion)(<tCOMA> parametro(tipo_parametro, clase_parametro, simbolo_funcion) )*
+  /* lista_parametrosRec() */
  }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -390,25 +410,25 @@ void lista_parametros() :
 
 
 /*parametro := <tID> parametro_vector*/
-void parametro() :
-{}
+void parametro(Symbol.Types tipo_parametro, Symbol.ParameterClass clase_parametro, Symbol simbolo_funcion) :
+{Token t; int tamanyo_vector = 0; Symbol parametro = null;}
 { try{
-  <tID> (parametro_vector())?
+  t = <tID> (tamanyo_vector = declaracion_vector())?
+  {
+        try
+        {
+            parametro = SemFunc.insertar_parametro(tabla_simbolos, t, tipo_parametro, tamanyo_vector, clase_parametro);
+        }catch(AlreadyDefinedSymbolException e){
+              System.out.println(e.getMessage());
+        }
+        if(parametro != null)
+            SemFunc.insertar_parametro_en_funcion(simbolo_funcion, parametro);
+  }
  }catch(ParseException e) {
 	errorSintactico(e);
  }
 }
 
-/*parametro_vector ::= <tAV> <tVALORENTERO> <tCV> */
-/*IGUAL QUE VARIABLE VECTOR-- ¿ELIMINAR?*/
-void parametro_vector() :
-{}
-{ try{
-  <tAV> <tVALORENTERO> <tCV>
- }catch(ParseException e) {
-	errorSintactico(e);
- }
-}
 /***BLOQUE SENTENCIAS**/
 
 /*bloque_sentencias ::= <tBEGIN> lista_sentencias <tEND>*/ 
