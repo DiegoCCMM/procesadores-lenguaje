@@ -352,9 +352,9 @@ void declaracion_proc() :
 /*cabecera_proc ::= <tPROCEDURE> <tID> parametros_formales <tIS>*/
 void cabecera_proc() :
 {Token t;
-ArrayList<Symbol> parm_list = new ArrayList<>();
+ArrayList<Symbol> parm_list = new ArrayList<Symbol>();
 SymbolProcedure simbolo_procedure;}
-{ try{
+{try{
   <tPROCEDURE> t = <tID>
   {simbolo_procedure = new SymbolProcedure(t.image, parm_list);
   tabla_simbolos.insertSymbol(simbolo_procedure);
@@ -412,6 +412,7 @@ void lista_parametros(Symbol.Types tipo_parametro, Symbol.ParameterClass clase_p
  }
 }
 
+
 /*parametro := <tID> parametro_vector*/
 void parametro(Symbol.Types tipo_parametro, Symbol.ParameterClass clase_parametro, Symbol simbolo_funcion) :
 {Token t; Integer tamanyo_vector = null; Symbol parametro = null;}
@@ -434,7 +435,7 @@ void parametro(Symbol.Types tipo_parametro, Symbol.ParameterClass clase_parametr
 
 /***BLOQUE SENTENCIAS**/
 
-/*bloque_sentencias ::= <tBEGIN> lista_sentencias <tEND>*/ 
+/*bloque_sentencias ::= <tBEGIN> lista_sentencias <tEND>*/
 void bloque_sentencias() :
 {}
 { try{
@@ -460,7 +461,7 @@ void lista_sentencias() :
 void sentencia() :
 {}
 {
-  try { 
+  try {
 	  leer() <tPC>
 	| skip_linea() <tPC>	 //coge toda la entrada hasta \n
 	| escribir() <tPC>
@@ -614,7 +615,7 @@ void var_vector() :
 void invocacion_procedimiento() : /*IMPORTANTE TIENE QUE SER PROCEDIMIENTO EN EL SEMANTICO*/
 {}
 {
-	  try { 
+	  try {
 	  	<tID> argumentos() <tPC>
 	  }catch(ParseException e) {
 		  panic_mode(tPC);
@@ -626,7 +627,7 @@ void invocacion_procedimiento() : /*IMPORTANTE TIENE QUE SER PROCEDIMIENTO EN EL
 void argumentos() :
 {}
 { try{
-  <tAP> (lista_expresiones())? <tCP> 
+  <tAP> (lista_expresiones())? <tCP>
  }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -645,8 +646,8 @@ void lista_expresiones() :
 /*seleccion ::= <tIF> expresion <tTHEN> lista_sentencias (<tELSE> lista_sentencias)? <tEND>*/
 void seleccion() :
 {}
-{ 
-  try { 
+{
+  try {
 	  <tIF> expresion() <tTHEN> lista_sentencias()
 	  (
 	    <tELSE> lista_sentencias()
@@ -662,7 +663,7 @@ void seleccion() :
 void mientras_que() :
 {}
 {
-  try { 
+  try {
   	<tWHILE> expresion() <tDO> lista_sentencias() <tEND>
   }catch(ParseException e) {
 	  panic_mode(tEND);
@@ -671,16 +672,19 @@ void mientras_que() :
 }
 
 /*expresion := expresion_simple() (operador_relacional() expresion_simple())?*/
-void expresion() :
-{}
+Symbol expresion() :
+{Symbol sim_e1=null,sim_e2=null;}
 { try{
-  expresion_simple()
+  sim_e1=expresion_simple()
   (
-    operador_relacional() expresion_simple()
-  )?
+    operador_relacional() sim_e2=expresion_simple()
+  {
+      SemFunc.comprobacion_tipo(sim_e1,Symbol.Types.INT);
+      SemFunc.comprobacion_tipo(sim_e2,Symbol.Types.INT);
+  })?
    }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }finally{return sim_e1; }
 }
 
 /*operador_relacional : <tIGUAL> | <tMENOR> | <tMAYOR> | <tMEI> | <tMAI> | <tNI> */
@@ -699,16 +703,20 @@ void operador_relacional() :
 }
 
 /* expresion_simple : ( <tSUMA> | <tRESTA> )? termino ( operador_aditivo termino )* */
-void expresion_simple() :
-{}
-{ try{
-  (<tSUMA> | <tRESTA> )? termino() (operador_aditivo() termino() )*
-   }catch(ParseException e) {
-	errorSintactico(e);
- }
+Symbol expresion_simple() :
+{Symbol sim_f1=null,sim_f2=null;}
+{
+  try{//TODO: comprobar que se aparece +|- termino sea entero
+  (<tSUMA> | <tRESTA> )? sim_f1=termino() (operador_aditivo() sim_f2 =termino() {
+      SemFunc.comprobacion_tipo(sim_f1,Symbol.Types.INT);
+      SemFunc.comprobacion_tipo(sim_f2,Symbol.Types.INT);
+  })*
+  }catch(ParseException e) {
+	  errorSintactico(e);
+  }finally{return sim_f1;}
 }
 
-/* operador_aditivo :=  <tSUMA>| <tRESTA>| <tOR>*/ 
+/* operador_aditivo :=  <tSUMA>| <tRESTA>| <tOR>*/
 void operador_aditivo() :
 {}
 { try{
@@ -721,14 +729,17 @@ void operador_aditivo() :
 }
 
 /*termino := factor ( operador_multiplicativo factor )* */
-void termino() :
-{}
+Symbol termino() :
+{Symbol sim_f1=null, sim_f2=null;}
 {
   try{
-  factor() (operador_multiplicativo() factor() )* 
+  sim_f1 =factor() (operador_multiplicativo() sim_f2= factor() {
+      SemFunc.comprobacion_tipo(sim_f1,Symbol.Types.INT);
+      SemFunc.comprobacion_tipo(sim_f2,Symbol.Types.INT);
+  })*
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }finally{ return sim_f1;}
 }
 
 /*operador_multiplicativo :=  <tMUL>| <tMOD>| <tDIV>| <tAND>*/
@@ -748,45 +759,57 @@ void operador_multiplicativo() :
 /*factor := <tNOT> factor | <tAP> expresion <tCP> | <tINT2CHAR> <tAP> expresion <tCP> | <tCHAR2INT> <tAP> expresion <tCP>
 | <tID> accion_o_vector | <tCONST_INT>| <tCONST_CHAR>| <tCONST_STRING>| <tTRUE>| <tFALSE>*/
 
-void factor() :
-{}
+Symbol factor() : //TODO; utilizar tipo o simbolo completo?
+{Token t; Symbol sim_f=null, sim_e=null;}
 {
   try{
-  <tNOT> factor()
-| <tAP> expresion() <tCP>
-| <tINT2CHAR> <tAP> expresion() <tCP>
-| <tCHAR2INT> <tAP> expresion() <tCP>
-| <tID> funcion_o_vector()     /*llamada a funcion o componente de vector*/
-| <tVALORENTERO>
-| <tVALORCHAR>
-| <tVALORCADENA>
-| <tTRUE>
-| <tFALSE>
+  <tNOT> sim_f = factor(){
+        SemFunc.comprobacion_tipo(sim_f,Symbol.Types.BOOL);
+  }
+| <tAP> sim_f = expresion() <tCP>
+| <tINT2CHAR> <tAP> sim_e =expresion() <tCP> {
+        SemFunc.comprobacion_tipo(sim_e,Symbol.Types.INT);
+       // sim_f = Symbol.Types.CHAR;
+       }
+| <tCHAR2INT> <tAP> sim_e=expresion() <tCP> {
+        SemFunc.comprobacion_tipo(sim_e,Symbol.Types.CHAR);
+        //sim_f = new SymbolInt();
+    }
+| t=<tID> sim_f = funcion_o_vector() //TODO: comprobar que el id esta en la tabla    /*llamada a funcion o componente de vector*/
+| t= <tVALORENTERO> { sim_f = new SymbolInt("",Integer.parseInt(t.image),Symbol.ParameterClass.NONE);}
+| t= <tVALORCHAR>  { sim_f = new SymbolChar("",t.image.charAt(0),Symbol.ParameterClass.NONE);}
+| t= <tVALORCADENA> { } //todo: ver como pasar cadenas
+| <tTRUE> { sim_f = new SymbolBool("",true,Symbol.ParameterClass.NONE);}
+| <tFALSE> { sim_f = new SymbolBool("",false,Symbol.ParameterClass.NONE);}
  }catch(ParseException e) {
 	errorSintactico(e);
+ }finally{
+    return sim_f;
  }
 }
 
 /*funcion_o_vector := <tAP> lista_cero_o_mas_exps <tCP> | <tAV> expresion <tCV> | /*epsilon* */
-void funcion_o_vector() :
-{}
+Symbol funcion_o_vector() : //TODO: revisar tipos
+{Symbol sim=null;}
 {
   try{
-  <tAP> (lista_uno_o_mas_exps() )? <tCP> | <tAV> expresion() <tCV> | {} /*epsilon*/
+  <tAP> (sim= lista_uno_o_mas_exps() )? <tCP> | <tAV> sim = expresion() <tCV> | {} /*epsilon*/
  }catch(ParseException e) {
 	errorSintactico(e);
+ }finally{
+  return sim;
  }
 }
 
 /*lista_uno_o_mas_exps:= expresion() (<tCOMA> expresion())* */
-void lista_uno_o_mas_exps() :
-{}
+Symbol lista_uno_o_mas_exps() :
+{Symbol sim=null;}
 {
-  try{
-  expresion() (<tCOMA> expresion() )* 
+  try{ //TODO: comprobar tipo
+  expresion() (<tCOMA> expresion() )*
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }finally{return sim; }
 }
 
 

@@ -85,5 +85,16 @@ public class SemanticFunctions {
 
     }
 
+    /*
+        Comprobracion del tipo de dato|variable|expresion
+     */
+    public static void comprobacion_tipo(Symbol sim, Symbol.Types tipo_esperado){
+        if(sim.type != tipo_esperado && sim.type != null){
+            //TODO:add datos de linea/columna?
+            System.out.println("INCOMPATIBILIDAD DE TIPOS: Se esperaba un dato de tipo "+ tipo_esperado);
+            sim.type=tipo_esperado;
+        }
+    }
+
 
 }
