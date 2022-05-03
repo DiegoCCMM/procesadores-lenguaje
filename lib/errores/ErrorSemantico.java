@@ -29,7 +29,7 @@ public class ErrorSemantico {
 		System.err.println(sep);
 	}
 
-	public static void deteccion(SymbolNo3tFoundException e, Token t) {
+	public static void deteccion(SymbolNotFoundException e, Token t) {
 		contadorErrores++;
 		System.err.println(sep);
 		System.err.println("ERROR SEMÁNTICO (" + t.beginLine + "," + t.beginColumn + "): " +
