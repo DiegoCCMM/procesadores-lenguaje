@@ -25,9 +25,14 @@ public class SemanticFunctions {
 
     public static void insertar_simbolo_declaracion(SymbolTable tabla_simbolos, Token token_simbolo, Symbol.Types tipo_simbolo,
                                                     Integer tamanyo_vector) throws AlreadyDefinedSymbolException {
-        Symbol simbolo_a_insertar = null;
         String nombre_simbolo = token_simbolo.image;
+        Symbol simbolo_a_insertar = define_tipo_simbolo(token_simbolo, tipo_simbolo, tamanyo_vector, nombre_simbolo);
+        
+        if (simbolo_a_insertar != null) tabla_simbolos.insertSymbol(simbolo_a_insertar);
+    }
 
+    private static Symbol define_tipo_simbolo(Token token_simbolo, Symbol.Types tipo_simbolo, Integer tamanyo_vector, String nombre_simbolo) {
+        Symbol simbolo_a_insertar = null;
         if (tamanyo_vector != null && tamanyo_vector > 0) {
             simbolo_a_insertar = new SymbolArray(nombre_simbolo, 0, tamanyo_vector - 1, tipo_simbolo);
         } else if (tamanyo_vector != null && tamanyo_vector < 0) {
@@ -42,13 +47,22 @@ public class SemanticFunctions {
         } else if (tipo_simbolo == Symbol.Types.BOOL) {
             simbolo_a_insertar = new SymbolBool(nombre_simbolo);
         }
-        if (simbolo_a_insertar != null) tabla_simbolos.insertSymbol(simbolo_a_insertar);
+        return simbolo_a_insertar;
     }
 
     public static Symbol insertar_parametro(SymbolTable tabla_simbolos, Token token_simbolo, Symbol.Types tipo_simbolo,
                                             Integer tamanyo_vector, Symbol.ParameterClass clase_simbolo) throws AlreadyDefinedSymbolException {
-        Symbol simbolo_a_insertar = null;
         String nombre_simbolo = token_simbolo.image;
+        Symbol simbolo_a_insertar = define_tipo_simbolo(tabla_simbolos, token_simbolo, tipo_simbolo, tamanyo_vector, clase_simbolo, nombre_simbolo);
+
+        if(simbolo_a_insertar !=null) tabla_simbolos.insertSymbol(simbolo_a_insertar);
+
+
+        return(simbolo_a_insertar);
+    }
+
+    private static Symbol define_tipo_simbolo(SymbolTable tabla_simbolos, Token token_simbolo, Symbol.Types tipo_simbolo, Integer tamanyo_vector, Symbol.ParameterClass clase_simbolo, String nombre_simbolo) throws AlreadyDefinedSymbolException {
+        Symbol simbolo_a_insertar = null;
         if (tamanyo_vector != null && tamanyo_vector > 0) {
             simbolo_a_insertar = new SymbolArray(nombre_simbolo, 0, tamanyo_vector - 1, tipo_simbolo, clase_simbolo);
         } else if (tamanyo_vector != null && tamanyo_vector <= 0) {
@@ -63,18 +77,8 @@ public class SemanticFunctions {
         } else if (tipo_simbolo == Symbol.Types.BOOL) {
             simbolo_a_insertar = new SymbolBool(nombre_simbolo, clase_simbolo);
         }
-        if(simbolo_a_insertar!=null) tabla_simbolos.insertSymbol(simbolo_a_insertar);
-
-        return(simbolo_a_insertar);
+        return simbolo_a_insertar;
     }
-
-    /*public static void insertar_accion(SymbolTable tabla_simbolos, Token token_simbolo, ArrayList<Symbol> parametros_formales, Symbol.Types return_type){
-        String nombre_simbolo = token_simbolo.image;
-
-        if(tipo_simbolo == Symbol.Types.FUNCTION){
-            tabla_simbolos.insertSymbol(new SymbolFunction(nombre_simbolo, ));
-        }
-    }*/
 
     public static void insertar_parametro_en_funcion(Symbol simbolo_fun_proc, Symbol parametro) {
         if(simbolo_fun_proc instanceof SymbolFunction){

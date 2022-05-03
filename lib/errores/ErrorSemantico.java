@@ -16,6 +16,8 @@ import lib.symbolTable.exceptions.*;
 public class ErrorSemantico {
 	final static String sep = "*************************************************************************";
 
+	public ErrorSemantico() {}
+
 	private static int contadorErrores = 0;
 	private static int contadorWarnings = 0;
 
@@ -27,7 +29,7 @@ public class ErrorSemantico {
 		System.err.println(sep);
 	}
 
-	public static void deteccion(SymbolNotFoundException e, Token t) {
+	public static void deteccion(SymbolNo3tFoundException e, Token t) {
 		contadorErrores++;
 		System.err.println(sep);
 		System.err.println("ERROR SEMÁNTICO (" + t.beginLine + "," + t.beginColumn + "): " +

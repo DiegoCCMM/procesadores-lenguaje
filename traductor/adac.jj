@@ -17,7 +17,8 @@ import java.util.*;
 public class adac {
 
    static SymbolTable tabla_simbolos = new SymbolTable();
-   static  SemanticFunctions SemFunc = new SemanticFunctions();
+   static SemanticFunctions SemFunc = new SemanticFunctions();
+   static ErrorSemantico ErrorSemantico = new ErrorSemantico();
 
     public static void main(String [] args)
   {
@@ -255,7 +256,7 @@ Symbol.Types tipo_variables():
  
  /*variable := <tID> declaracion_vector*/
  void variable(Symbol.Types tipo_variable):
- {Token t; Integer tamanyo_vector = null;}
+ {Token t = null; Integer tamanyo_vector = null;}
  {
    try { 
    t = <tID> (tamanyo_vector = declaracion_vector())? /*podemos utilizar solo <tAV> <tVALORENTERO> <tCV> */
@@ -263,7 +264,7 @@ Symbol.Types tipo_variables():
         try{
             SemFunc.insertar_simbolo_declaracion(tabla_simbolos, t, tipo_variable, tamanyo_vector);
         }catch(AlreadyDefinedSymbolException e){
-            System.out.println(e.getMessage());
+            ErrorSemantico.deteccion(e, t);
         }
    }
  }catch(ParseException e) {
@@ -320,7 +321,7 @@ void declaracion_funcion() :
 
 /*cabecera_funcion ::= <tFUNCTION> tipo_variables <tID> parametros_formales <tIS>*/
 void cabecera_funcion() :
-{Token t;
+{Token t = null;
 ArrayList<Symbol> parametros_formales = new ArrayList<Symbol>();
 Symbol.Types tipo_func;
 SymbolFunction simbolo_funcion;}
@@ -335,7 +336,7 @@ SymbolFunction simbolo_funcion;}
    }catch(ParseException e) {
 	errorSintactico(e);
    }catch(AlreadyDefinedSymbolException e){
-    System.out.println(e.getMessage());
+    ErrorSemantico.deteccion(e, t);
    }
 }
 
@@ -351,7 +352,7 @@ void declaracion_proc() :
 
 /*cabecera_proc ::= <tPROCEDURE> <tID> parametros_formales <tIS>*/
 void cabecera_proc() :
-{Token t;
+{Token t = null;
 ArrayList<Symbol> parm_list = new ArrayList<>();
 SymbolProcedure simbolo_procedure;}
 { try{
@@ -363,7 +364,7 @@ SymbolProcedure simbolo_procedure;}
    }catch(ParseException e) {
 	errorSintactico(e);
    }catch(AlreadyDefinedSymbolException e){
-        System.out.println(e.getMessage());
+        ErrorSemantico.deteccion(e, t);
    }
 }
 
@@ -414,7 +415,7 @@ void lista_parametros(Symbol.Types tipo_parametro, Symbol.ParameterClass clase_p
 
 /*parametro := <tID> parametro_vector*/
 void parametro(Symbol.Types tipo_parametro, Symbol.ParameterClass clase_parametro, Symbol simbolo_funcion) :
-{Token t; Integer tamanyo_vector = null; Symbol parametro = null;}
+{Token t = null; Integer tamanyo_vector = null; Symbol parametro = null;}
 { try{
   t = <tID> (tamanyo_vector = declaracion_vector())?
   {
@@ -422,7 +423,7 @@ void parametro(Symbol.Types tipo_parametro, Symbol.ParameterClass clase_parametr
         {
             parametro = SemFunc.insertar_parametro(tabla_simbolos, t, tipo_parametro, tamanyo_vector, clase_parametro);
         }catch(AlreadyDefinedSymbolException e){
-              System.out.println(e.getMessage());
+              ErrorSemantico.deteccion(e, t);
         }
         if(parametro != null)
             SemFunc.insertar_parametro_en_funcion(simbolo_funcion, parametro);
