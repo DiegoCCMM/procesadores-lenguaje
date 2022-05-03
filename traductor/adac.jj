@@ -782,7 +782,8 @@ Symbol factor() :
 | t=<tID> sim_f = funcion_o_vector() //TODO: comprobar que el id esta en la tabla    /*llamada a funcion o componente de vector*/
 | t= <tVALORENTERO> { sim_f = new SymbolInt("",Integer.parseInt(t.image),Symbol.ParameterClass.NONE);}
 | t= <tVALORCHAR>  { sim_f = new SymbolChar("",t.image.charAt(0),Symbol.ParameterClass.NONE);}
-| t= <tVALORCADENA> { sim_f = new SymbolArray(t.image, 0, t.image.length, Symbol.Types.CHAR);}
+| t= <tVALORCADENA> { //sim_f = new SymbolArray(t.image, 0, t.image.length, Symbol.Types.CHAR);
+}  //TODO SACAR LA LONGITUD DEL STRING
 | <tTRUE> { sim_f = new SymbolBool("",true,Symbol.ParameterClass.NONE);}
 | <tFALSE> { sim_f = new SymbolBool("",false,Symbol.ParameterClass.NONE);}
  }catch(ParseException e) {
