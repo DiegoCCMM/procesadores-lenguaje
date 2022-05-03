@@ -507,9 +507,10 @@ void lista_asignablesRec() : //se puede sustituir por variable
 }
 /*asignable_vector ::= <tAV> expresion <tCV> */
 void asignable_vector() :
-{}
+{Symbol sim_e1 = null;}
 { try{
-  <tAV> expresion() <tCV>
+  <tAV> sim_e1 = expresion() <tCV>
+  {SemFunc.comprobacion_tipo(sim_e1, Symbol.Types.INT);}
  }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -679,8 +680,7 @@ Symbol expresion() :
   (
     operador_relacional() sim_e2=expresion_simple()
   {
-      SemFunc.comprobacion_tipo(sim_e1,Symbol.Types.INT);
-      SemFunc.comprobacion_tipo(sim_e2,Symbol.Types.INT);
+      SemFunc.comprobacion_mismo_tipo(sim_e1, sim_e2);
   })?
    }catch(ParseException e) {
 	errorSintactico(e);
@@ -704,12 +704,16 @@ void operador_relacional() :
 
 /* expresion_simple : ( <tSUMA> | <tRESTA> )? termino ( operador_aditivo termino )* */
 Symbol expresion_simple() :
-{Symbol sim_f1=null,sim_f2=null;}
+{Symbol sim_f1=null,sim_f2=null;
+boolean positivo_negativo = false;
+boolean operador_booleano = false;}
 {
-  try{//TODO: comprobar que se aparece +|- termino sea entero
-  (<tSUMA> | <tRESTA> )? sim_f1=termino() (operador_aditivo() sim_f2 =termino() {
-      SemFunc.comprobacion_tipo(sim_f1,Symbol.Types.INT);
-      SemFunc.comprobacion_tipo(sim_f2,Symbol.Types.INT);
+  try{
+  (<tSUMA>{positivo_negativo = true;} | <tRESTA>{positivo_negativo = true;} )?
+  sim_f1=termino() {if(positivo_negativo)
+                        SemFunc.comprobacion_tipo(sim_f1,Symbol.Types.INT);
+                   } (operador_booleano = operador_aditivo() sim_f2 =termino() {
+      SemFunc.comprobacion_tipo(sim_f1,sim_f2,operador_booleano);
   })*
   }catch(ParseException e) {
 	  errorSintactico(e);
@@ -717,12 +721,12 @@ Symbol expresion_simple() :
 }
 
 /* operador_aditivo :=  <tSUMA>| <tRESTA>| <tOR>*/
-void operador_aditivo() :
+boolean operador_aditivo() :
 {}
 { try{
-  <tSUMA>
-| <tRESTA>
-| <tOR>
+  <tSUMA>{return(false);}
+| <tRESTA>{return(false);}
+| <tOR> {return(true);}
  }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -730,12 +734,12 @@ void operador_aditivo() :
 
 /*termino := factor ( operador_multiplicativo factor )* */
 Symbol termino() :
-{Symbol sim_f1=null, sim_f2=null;}
+{Symbol sim_f1=null, sim_f2=null;
+boolean operador_booleano = false;}
 {
   try{
-  sim_f1 =factor() (operador_multiplicativo() sim_f2= factor() {
-      SemFunc.comprobacion_tipo(sim_f1,Symbol.Types.INT);
-      SemFunc.comprobacion_tipo(sim_f2,Symbol.Types.INT);
+  sim_f1 =factor() (operador_booleano = operador_multiplicativo() sim_f2= factor() {
+      SemFunc.comprobacion_tipo(sim_f1, sim_f2, operador_booleano);
   })*
  }catch(ParseException e) {
 	errorSintactico(e);
@@ -743,14 +747,14 @@ Symbol termino() :
 }
 
 /*operador_multiplicativo :=  <tMUL>| <tMOD>| <tDIV>| <tAND>*/
-void operador_multiplicativo() :
+boolean operador_multiplicativo() :
 {}
 {
   try{
-  <tMUL>
-| <tMOD>
-| <tDIV>
-| <tAND>
+  <tMUL> {return false;}
+| <tMOD> {return false;}
+| <tDIV> {return false;}
+| <tAND> {return true;}
  }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -759,7 +763,7 @@ void operador_multiplicativo() :
 /*factor := <tNOT> factor | <tAP> expresion <tCP> | <tINT2CHAR> <tAP> expresion <tCP> | <tCHAR2INT> <tAP> expresion <tCP>
 | <tID> accion_o_vector | <tCONST_INT>| <tCONST_CHAR>| <tCONST_STRING>| <tTRUE>| <tFALSE>*/
 
-Symbol factor() : //TODO; utilizar tipo o simbolo completo?
+Symbol factor() :
 {Token t; Symbol sim_f=null, sim_e=null;}
 {
   try{
@@ -769,16 +773,16 @@ Symbol factor() : //TODO; utilizar tipo o simbolo completo?
 | <tAP> sim_f = expresion() <tCP>
 | <tINT2CHAR> <tAP> sim_e =expresion() <tCP> {
         SemFunc.comprobacion_tipo(sim_e,Symbol.Types.INT);
-       // sim_f = Symbol.Types.CHAR;
+        //sim_f = new SymbolChar("", '', Symbol.ParameterClass.NONE); TODO REVISAR COMO LO HICE EL AÑO PASADO
        }
 | <tCHAR2INT> <tAP> sim_e=expresion() <tCP> {
         SemFunc.comprobacion_tipo(sim_e,Symbol.Types.CHAR);
-        //sim_f = new SymbolInt();
+        //sim_f = new SymbolInt("", 0, Symbol.ParameterClass.NONE);   //TODO REVISAR COMO LO HICE EL AÑO PASADO
     }
 | t=<tID> sim_f = funcion_o_vector() //TODO: comprobar que el id esta en la tabla    /*llamada a funcion o componente de vector*/
 | t= <tVALORENTERO> { sim_f = new SymbolInt("",Integer.parseInt(t.image),Symbol.ParameterClass.NONE);}
 | t= <tVALORCHAR>  { sim_f = new SymbolChar("",t.image.charAt(0),Symbol.ParameterClass.NONE);}
-| t= <tVALORCADENA> { } //todo: ver como pasar cadenas
+| t= <tVALORCADENA> { sim_f = new SymbolArray(t.image, 0, t.image.length, Symbol.Types.CHAR);}
 | <tTRUE> { sim_f = new SymbolBool("",true,Symbol.ParameterClass.NONE);}
 | <tFALSE> { sim_f = new SymbolBool("",false,Symbol.ParameterClass.NONE);}
  }catch(ParseException e) {

@@ -89,6 +89,16 @@ public class SemanticFunctions {
 
     }
 
+    public static void comprobacion_tipo(Symbol sim_1, Symbol sim_2, boolean operador_booleano){
+        if(operador_booleano){
+            comprobacion_tipo(sim_1, Symbol.Types.BOOL);
+            comprobacion_tipo(sim_2, Symbol.Types.BOOL);
+        }else{//cualquier otro caso con los operadores aditivos o multiplicativos
+            comprobacion_tipo(sim_1, Symbol.Types.INT);
+            comprobacion_tipo(sim_2, Symbol.Types.INT);
+        }
+    }
+
     /*
         Comprobracion del tipo de dato|variable|expresion
      */
@@ -97,6 +107,12 @@ public class SemanticFunctions {
             //TODO:add datos de linea/columna?
             System.out.println("INCOMPATIBILIDAD DE TIPOS: Se esperaba un dato de tipo "+ tipo_esperado);
             sim.type=tipo_esperado;
+        }
+    }
+
+    public static void comprobacion_mismo_tipo(Symbol sim1, Symbol sim2){
+        if(sim1.type != sim2.type){
+            System.out.println("No se pueden comparar tipos distintos");
         }
     }
 
