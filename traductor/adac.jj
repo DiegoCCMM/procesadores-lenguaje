@@ -762,7 +762,7 @@ boolean operador_multiplicativo() :
 
 /*factor := <tNOT> factor | <tAP> expresion <tCP> | <tINT2CHAR> <tAP> expresion <tCP> | <tCHAR2INT> <tAP> expresion <tCP>
 | <tID> accion_o_vector | <tCONST_INT>| <tCONST_CHAR>| <tCONST_STRING>| <tTRUE>| <tFALSE>*/
-
+///TODO CAMBIAR TODO LO REFERENTE A SYMBOL POR ATTRIBUTES
 Symbol factor() :
 {Token t; Symbol sim_f=null, sim_e=null;}
 {
@@ -772,17 +772,19 @@ Symbol factor() :
   }
 | <tAP> sim_f = expresion() <tCP>
 | <tINT2CHAR> <tAP> sim_e =expresion() <tCP> {
-        SemFunc.comprobacion_tipo(sim_e,Symbol.Types.INT);
-        //sim_f = new SymbolChar("", '', Symbol.ParameterClass.NONE); TODO REVISAR COMO LO HICE EL AÑO PASADO
+        if(SemFunc.comprobacion_tipo(sim_e,Symbol.Types.INT)){
+            sim_f = new SymbolChar("", Symbol.ParameterClass.NONE);
+        }
        }
 | <tCHAR2INT> <tAP> sim_e=expresion() <tCP> {
-        SemFunc.comprobacion_tipo(sim_e,Symbol.Types.CHAR);
-        //sim_f = new SymbolInt("", 0, Symbol.ParameterClass.NONE);   //TODO REVISAR COMO LO HICE EL AÑO PASADO
+        if(SemFunc.comprobacion_tipo(sim_e,Symbol.Types.CHAR)){
+            sim_f = new SymbolInt("", Symbol.ParameterClass.NONE);
+        }
     }
 | t=<tID> sim_f = funcion_o_vector() //TODO: comprobar que el id esta en la tabla    /*llamada a funcion o componente de vector*/
 | t= <tVALORENTERO> { sim_f = new SymbolInt("",Integer.parseInt(t.image),Symbol.ParameterClass.NONE);}
 | t= <tVALORCHAR>  { sim_f = new SymbolChar("",t.image.charAt(0),Symbol.ParameterClass.NONE);}
-| t= <tVALORCADENA> { //sim_f = new SymbolArray(t.image, 0, t.image.length, Symbol.Types.CHAR);
+| t= <tVALORCADENA> { sim_f = new SymbolArray(t.image, 0, t.image.length(), Symbol.Types.CHAR);
 }  //TODO SACAR LA LONGITUD DEL STRING
 | <tTRUE> { sim_f = new SymbolBool("",true,Symbol.ParameterClass.NONE);}
 | <tFALSE> { sim_f = new SymbolBool("",false,Symbol.ParameterClass.NONE);}
