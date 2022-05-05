@@ -604,7 +604,7 @@ void var_asignacion() :
 void var_vector() :
 {}
 { try{
-  <tAV> expresion() <tCV>
+  <tAV> expresion() <tCV>   //TODO comprobar que la expresion termina en un entero
 |
   {} /*epsilon*/
  }catch(ParseException e) {
