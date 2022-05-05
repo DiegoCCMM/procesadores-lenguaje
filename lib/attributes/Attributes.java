@@ -20,6 +20,7 @@ public class Attributes implements Cloneable {
     public String valString;
     public int tamanyo_vector;
 
+
     public Attributes() {
         //COMPLETAR
     }

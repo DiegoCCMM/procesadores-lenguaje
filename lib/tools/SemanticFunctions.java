@@ -88,7 +88,7 @@ public class SemanticFunctions {
         }
 
     }
-
+    //TODO PASAR TODAS ESTAS FUNCIONES A ATRIBUTOS CAMBIANDO SYMBOL POR ATTRIBUTES.
     public static void comprobacion_tipo(Symbol sim_1, Symbol sim_2, boolean operador_booleano){
         if(operador_booleano){
             comprobacion_tipo(sim_1, Symbol.Types.BOOL);
