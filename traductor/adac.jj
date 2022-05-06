@@ -9,6 +9,7 @@ package traductor;
 
 import lib.symbolTable.SymbolTable;
 import lib.symbolTable.*;
+import lib.attributes.Attributes;
 import lib.symbolTable.exceptions.*;
 import lib.errores.*;
 import lib.tools.*;
@@ -42,7 +43,7 @@ public class adac {
     catch (TokenMgrError e)    {
       errorLexico(token);
     }
-    catch(ParseException e) {      	
+    catch(ParseException e) {
 		//errorSintactico(e);
    }
   System.out.println(tabla_simbolos.toString());
@@ -50,8 +51,8 @@ public class adac {
   }
 
   static void errorLexico(Token t) {
-    System.err.println("ERROR L�XICO (" + SimpleCharStream.getBeginLine() + 
-    ", " + SimpleCharStream.getBeginColumn() + "): s�mbolo no reconocido: <" + 
+    System.err.println("ERROR L�XICO (" + SimpleCharStream.getBeginLine() +
+    ", " + SimpleCharStream.getBeginColumn() + "): s�mbolo no reconocido: <" +
     SimpleCharStream.GetImage().charAt(adacTokenManager.curLexState) + ">");
   }
 
@@ -71,13 +72,13 @@ public class adac {
     {
       token = adac.getNextToken();
     }
-    String error_msg = "PANIC MODE (<" + t.beginLine + ", " + 
+    String error_msg = "PANIC MODE (<" + t.beginLine + ", " +
     t.beginColumn + ">) : ignorando entrada hasta ";
-    if (kind == tEND) { 
+    if (kind == tEND) {
     	error_msg += " [end]";
-  	}else {  
+  	}else {
    		 error_msg += " [;]";
-	}	
+	}
     System.err.println(error_msg);
   }
 
@@ -86,7 +87,7 @@ public class adac {
 PARSER_END(adac)
 
 TOKEN_MGR_DECLS: {
-  
+
 	static void infoLexico(Token t,String nombre) {
 	//  System.out.println("("+ t.beginLine+","+t.beginColumn+"): " + nombre +" \""+ t.image+"\"");
 	}
@@ -167,7 +168,7 @@ TOKEN : /*Identificadores*/
                         //[a-z,A-Z]([a-z,A-Z]|_[a-z,A-Z]|_[0-9]|[0-9])*_?|_
 |   <tID: <LETRA>(<LETRA> | <BARRA_POR_DELANTE> | <DIGITO>)*("_")? | "_"((<LETRA> | <DIGITO>) (<LETRA> | <BARRA_POR_DELANTE> | <DIGITO>)*("_")?)?>  {infoLexico(matchedToken,"identificador");}
 
-  
+
 }
 
 TOKEN : /* Valores */
@@ -215,7 +216,7 @@ void declaracion_variables():
 void declaracion():
 {Symbol.Types tipo_variable;}
 {
-  try { 
+  try {
   	tipo_variable = tipo_variables() lista_vars(tipo_variable)
  }catch(ParseException e) {
 	errorSintactico(e);
@@ -226,7 +227,7 @@ void declaracion():
 Symbol.Types tipo_variables():
 {}
 {
-  try { 
+  try {
   	<tINT>
   	{
   	    return(Symbol.Types.INT);
@@ -247,18 +248,18 @@ Symbol.Types tipo_variables():
  void lista_vars(Symbol.Types tipo_variable):
  {}
  {
-   try { 
+   try {
    variable(tipo_variable) ( <tCOMA> variable(tipo_variable) )*
     }catch(ParseException e) {
 	errorSintactico(e);
  }
  }
- 
+
  /*variable := <tID> declaracion_vector*/
  void variable(Symbol.Types tipo_variable):
  {Token t = null; Integer tamanyo_vector = null;}
  {
-   try { 
+   try {
    t = <tID> (tamanyo_vector = declaracion_vector())? /*podemos utilizar solo <tAV> <tVALORENTERO> <tCV> */
    {
         try{
@@ -271,12 +272,12 @@ Symbol.Types tipo_variables():
 	errorSintactico(e);
  }
  }
- 
+
  /*declaracion_vector ::= <tAV> <tVALORENTERO> <tCV> | epsilon */
  int declaracion_vector():
  {Token t;}
  {
-   try { 
+   try {
    <tAV> t = <tVALORENTERO> <tCV>
    {
         return(Integer.parseInt(t.image));
@@ -290,7 +291,7 @@ Symbol.Types tipo_variables():
 /*declaracion_acciones ::= ( declaracion_accion )* */
 void declaracion_acciones() :
 {}
-{try { 
+{try {
   (declaracion_accion())*
    }catch(ParseException e) {
 	errorSintactico(e);
@@ -301,7 +302,7 @@ void declaracion_acciones() :
 void declaracion_accion() :
 {}
 {
-  try { 
+  try {
   declaracion_funcion() | declaracion_proc()
    }catch(ParseException e) {
 	errorSintactico(e);
@@ -312,7 +313,7 @@ void declaracion_accion() :
 void declaracion_funcion() :
 {}
 {
-	try { 
+	try {
   cabecera_funcion() declaracion_variables() bloque_sentencias()
    }catch(ParseException e) {
 	errorSintactico(e);
@@ -326,7 +327,7 @@ ArrayList<Symbol> parametros_formales = new ArrayList<Symbol>();
 Symbol.Types tipo_func;
 SymbolFunction simbolo_funcion;}
 {
-  try { 
+  try {
   <tFUNCTION> tipo_func = tipo_variables() t = <tID>
     {simbolo_funcion = new SymbolFunction(t.image, parametros_formales, tipo_func);
     tabla_simbolos.insertSymbol(simbolo_funcion);
@@ -435,7 +436,7 @@ void parametro(Symbol.Types tipo_parametro, Symbol.ParameterClass clase_parametr
 
 /***BLOQUE SENTENCIAS**/
 
-/*bloque_sentencias ::= <tBEGIN> lista_sentencias <tEND>*/ 
+/*bloque_sentencias ::= <tBEGIN> lista_sentencias <tEND>*/
 void bloque_sentencias() :
 {}
 { try{
@@ -507,10 +508,11 @@ void lista_asignablesRec() : //se puede sustituir por variable
 }
 /*asignable_vector ::= <tAV> expresion <tCV> */
 void asignable_vector() :
-{Symbol sim_e1 = null;}
+{Attributes atr_e1 = null;}
 { try{
-  <tAV> sim_e1 = expresion() <tCV>
-  {SemFunc.comprobacion_tipo(sim_e1, Symbol.Types.INT);}
+  <tAV> atr_e1 = expresion() <tCV>
+  {//SemFunc.comprobacion_tipo(atr_e1, Symbol.Types.INT);
+   }
  }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -616,7 +618,7 @@ void var_vector() :
 void invocacion_procedimiento() : /*IMPORTANTE TIENE QUE SER PROCEDIMIENTO EN EL SEMANTICO*/
 {}
 {
-	  try { 
+	  try {
 	  	<tID> argumentos() <tPC>
 	  }catch(ParseException e) {
 		  panic_mode(tPC);
@@ -673,18 +675,18 @@ void mientras_que() :
 }
 
 /*expresion := expresion_simple() (operador_relacional() expresion_simple())?*/
-Symbol expresion() :
-{Symbol sim_e1=null,sim_e2=null;}
+Attributes expresion() :
+{Attributes atr_e1=null,atr_e2=null;}
 { try{
-  sim_e1=expresion_simple()
+  atr_e1=expresion_simple()
   (
-    operador_relacional() sim_e2=expresion_simple()
+    operador_relacional() atr_e2=expresion_simple()
   {
-      SemFunc.comprobacion_mismo_tipo(sim_e1, sim_e2);
+     // SemFunc.comprobacion_mismo_tipo(atr_e1, atr_e2);
   })?
    }catch(ParseException e) {
 	errorSintactico(e);
- }finally{return sim_e1; }
+ }finally{return atr_e1; }
 }
 
 /*operador_relacional : <tIGUAL> | <tMENOR> | <tMAYOR> | <tMEI> | <tMAI> | <tNI> */
@@ -703,21 +705,18 @@ void operador_relacional() :
 }
 
 /* expresion_simple : ( <tSUMA> | <tRESTA> )? termino ( operador_aditivo termino )* */
-Symbol expresion_simple() :
-{Symbol sim_f1=null,sim_f2=null;
+Attributes expresion_simple() :
+{Attributes atr_f1=null,atr_f2=null; //TODO: mejor Attributes atr_1=new Attributes(),atr_2=new Attributes();?
 boolean positivo_negativo = false;
 boolean operador_booleano = false;}
 {
   try{
-  (<tSUMA>{positivo_negativo = true;} | <tRESTA>{positivo_negativo = true;} )?
-  sim_f1=termino() {if(positivo_negativo)
-                        SemFunc.comprobacion_tipo(sim_f1,Symbol.Types.INT);
-                   } (operador_booleano = operador_aditivo() sim_f2 =termino() {
-      SemFunc.comprobacion_tipo(sim_f1,sim_f2,operador_booleano);
-  })*
+    (<tSUMA>{positivo_negativo = true;} | <tRESTA>{positivo_negativo = true;} )?
+    atr_f1=termino() {if(positivo_negativo) atr_f1.comprobacion_tipo(Symbol.Types.INT); }
+    (operador_booleano = operador_aditivo() atr_f2 =termino() { Attributes.comprobacion_tipo(atr_f1,atr_f2,operador_booleano); })*
   }catch(ParseException e) {
 	  errorSintactico(e);
-  }finally{return sim_f1;}
+  }finally{return atr_f1;}
 }
 
 /* operador_aditivo :=  <tSUMA>| <tRESTA>| <tOR>*/
@@ -733,17 +732,17 @@ boolean operador_aditivo() :
 }
 
 /*termino := factor ( operador_multiplicativo factor )* */
-Symbol termino() :
-{Symbol sim_f1=null, sim_f2=null;
+Attributes termino() :
+{Attributes atr_f1=null,atr_f2=null;
 boolean operador_booleano = false;}
 {
   try{
-  sim_f1 =factor() (operador_booleano = operador_multiplicativo() sim_f2= factor() {
-      SemFunc.comprobacion_tipo(sim_f1, sim_f2, operador_booleano);
+  atr_f1 =factor() (operador_booleano = operador_multiplicativo() atr_f2= factor() {
+     Attributes.comprobacion_tipo(atr_f1, atr_f2, operador_booleano);
   })*
  }catch(ParseException e) {
 	errorSintactico(e);
- }finally{ return sim_f1;}
+ }finally{ return atr_f1;}
 }
 
 /*operador_multiplicativo :=  <tMUL>| <tMOD>| <tDIV>| <tAND>*/
@@ -763,60 +762,60 @@ boolean operador_multiplicativo() :
 /*factor := <tNOT> factor | <tAP> expresion <tCP> | <tINT2CHAR> <tAP> expresion <tCP> | <tCHAR2INT> <tAP> expresion <tCP>
 | <tID> accion_o_vector | <tCONST_INT>| <tCONST_CHAR>| <tCONST_STRING>| <tTRUE>| <tFALSE>*/
 ///TODO CAMBIAR TODO LO REFERENTE A SYMBOL POR ATTRIBUTES
-Symbol factor() :
-{Token t; Symbol sim_f=null, sim_e=null;}
+Attributes factor() :
+{Token t;  Attributes atr_f=null,atr_e;}
 {
   try{
-  <tNOT> sim_f = factor(){
-        SemFunc.comprobacion_tipo(sim_f,Symbol.Types.BOOL);
+  <tNOT> atr_f = factor(){
+       atr_f.comprobacion_tipo(Symbol.Types.BOOL);
   }
-| <tAP> sim_f = expresion() <tCP>
-| <tINT2CHAR> <tAP> sim_e =expresion() <tCP> {
-        if(SemFunc.comprobacion_tipo(sim_e,Symbol.Types.INT)){
-            sim_f = new SymbolChar("", Symbol.ParameterClass.NONE);
+| <tAP> atr_f = expresion() <tCP>
+| <tINT2CHAR> <tAP> atr_e =expresion() <tCP> {
+        if(atr_e.comprobacion_tipo(Symbol.Types.INT)){
+            atr_f = new Attributes(' '); //TODO: ver valor del nuevo atributo char y comprobar valor entero antes conversion
+            //atr_f.type = Symbol.Types.CHAR;
         }
        }
-| <tCHAR2INT> <tAP> sim_e=expresion() <tCP> {
-        if(SemFunc.comprobacion_tipo(sim_e,Symbol.Types.CHAR)){
-            sim_f = new SymbolInt("", Symbol.ParameterClass.NONE);
+| <tCHAR2INT> <tAP> atr_e=expresion() <tCP> {
+        if(atr_e.comprobacion_tipo(Symbol.Types.CHAR)){
+            atr_f = new Attributes(0); //TODO: ver valor del nuevo atributo int
+            //atr_f.type = Symbol.Types.INT;
         }
     }
-| t=<tID> sim_f = funcion_o_vector() //TODO: comprobar que el id esta en la tabla    /*llamada a funcion o componente de vector*/
-| t= <tVALORENTERO> { sim_f = new SymbolInt("",Integer.parseInt(t.image),Symbol.ParameterClass.NONE);}
-| t= <tVALORCHAR>  { sim_f = new SymbolChar("",t.image.charAt(0),Symbol.ParameterClass.NONE);}
-| t= <tVALORCADENA> { sim_f = new SymbolArray(t.image, 0, t.image.length(), Symbol.Types.CHAR);
-}  //TODO SACAR LA LONGITUD DEL STRING
-| <tTRUE> { sim_f = new SymbolBool("",true,Symbol.ParameterClass.NONE);}
-| <tFALSE> { sim_f = new SymbolBool("",false,Symbol.ParameterClass.NONE);}
+| t=<tID> atr_f = funcion_o_vector() //TODO: comprobar que el id esta en la tabla    /*llamada a funcion o componente de vector*/
+| t= <tVALORENTERO> { atr_f = new Attributes(Integer.parseInt(t.image));}
+| t= <tVALORCHAR>  { atr_f =new Attributes(t.image.charAt(0));}
+| t= <tVALORCADENA> { atr_f = new Attributes(t.image); }
+| <tTRUE> { atr_f = new Attributes(true);}
+| <tFALSE> { atr_f = new Attributes(false);}
  }catch(ParseException e) {
 	errorSintactico(e);
  }finally{
-    return sim_f;
+    return atr_f;
  }
 }
 
 /*funcion_o_vector := <tAP> lista_cero_o_mas_exps <tCP> | <tAV> expresion <tCV> | /*epsilon* */
-Symbol funcion_o_vector() : //TODO: revisar tipos
-{Symbol sim=null;}
+Attributes funcion_o_vector() : //TODO: revisar tipos
+{Attributes atr=new Attributes();}
 {
   try{
-  <tAP> (sim= lista_uno_o_mas_exps() )? <tCP> | <tAV> sim = expresion() <tCV> | {} /*epsilon*/
+  <tAP> (atr= lista_uno_o_mas_exps() )? <tCP> | <tAV> atr = expresion() <tCV> | {} /*epsilon*/
  }catch(ParseException e) {
 	errorSintactico(e);
  }finally{
-  return sim;
+  return atr;
  }
 }
 
 /*lista_uno_o_mas_exps:= expresion() (<tCOMA> expresion())* */
-Symbol lista_uno_o_mas_exps() :
-{Symbol sim=null;}
+Attributes lista_uno_o_mas_exps() :
+{Attributes atr=new Attributes();}
 {
-  try{ //TODO: comprobar tipo
-  expresion() (<tCOMA> expresion() )*
+  try{ //TODO: ver como comprobar tipo con  *
+  atr = expresion() (<tCOMA> expresion() )*
  }catch(ParseException e) {
 	errorSintactico(e);
- }finally{return sim; }
+ }finally{return atr; }
 }
-
 
