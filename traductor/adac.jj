@@ -586,6 +586,9 @@ void lista_escribiblesRec() :
 void asignacion() :
 {}
 { try{
+    //TODO FALTA EL SEMÁNTICO, HAY QUE COMPROBAR QUE EL ID DEL VAR ASIGNACIÓN EXISTE, SI EXISTE,
+    //todo se comprueba si el attributes tiene el mismo tipo, sino, errorsemantico
+    //TODO SI EL IDENTIFICAR NO SE ENCUENTRA EN LA TABLA DE SIMBOLOS SE CREA UNDEFINED O SE CREA CON EL TIPO ESPERADO DEL ATRIBUTO
   var_asignacion() <tOPAS> expresion()
  }catch(ParseException e) {
 	errorSintactico(e);
@@ -606,7 +609,8 @@ void var_asignacion() :
 void var_vector() :
 {}
 { try{
-  <tAV> expresion() <tCV>   //TODO comprobar que la expresion termina en un entero
+  <tAV> expresion() <tCV>   //TODO comprobar que la expresion termina en un entero, ESTÁ HECHO EN FUNCION O VECTOR
+                           //TODO CUANDO TERMINES TODO, MIRA DE REFACTORIZAR ESTAS COSAS PARA QUE SEA MENOS LIO
 |
   {} /*epsilon*/
  }catch(ParseException e) {
@@ -617,7 +621,10 @@ void var_vector() :
 /*invocacion_procedimiento ::= <tID> argumentos <tPC> */
 void invocacion_procedimiento() : /*IMPORTANTE TIENE QUE SER PROCEDIMIENTO EN EL SEMANTICO*/
 {}
-{
+{   //todo comprobar que esta en la tabla de simbolos, pasar el simbolo a los argumentos y ver que los parametros cumplen
+    //todo los requisitos de tipo y orden, tienes funciones en attributes que se usan para resolver las funciones, en funciones y vector
+    //todo mira a ver de generalizar estas invocaciones de procedimiento a funciones también
+    //
 	  try {
 	  	<tID> argumentos() <tPC>
 	  }catch(ParseException e) {
@@ -639,7 +646,7 @@ void argumentos() :
 /*lista_expresiones ::= expresion (<tCOMA> expresion)* */
 void lista_expresiones() :
 {}
-{ try{
+{ try{  //TODO refactoriza y reutiliza esto o lista_uno_o_mas_exps, porque hacen lo mismo
   expresion() (<tCOMA> expresion())*
  }catch(ParseException e) {
 	errorSintactico(e);
@@ -649,7 +656,7 @@ void lista_expresiones() :
 /*seleccion ::= <tIF> expresion <tTHEN> lista_sentencias (<tELSE> lista_sentencias)? <tEND>*/
 void seleccion() :
 {}
-{
+{   //TODO EXPRESION DEVUELVE BOOLEANO
   try {
 	  <tIF> expresion() <tTHEN> lista_sentencias()
 	  (
@@ -666,7 +673,7 @@ void seleccion() :
 void mientras_que() :
 {}
 {
-  try {
+  try { //TODO EXPRESION DEVUELVE BOOLEANO
   	<tWHILE> expresion() <tDO> lista_sentencias() <tEND>
   }catch(ParseException e) {
 	  panic_mode(tEND);
@@ -682,7 +689,7 @@ Attributes expresion() :
   (
     operador_relacional() atr_e2=expresion_simple()
   {
-     // SemFunc.comprobacion_mismo_tipo(atr_e1, atr_e2);
+     atr_e1.comprobacion_mismo_tipo(atr_e2);
   })?
    }catch(ParseException e) {
 	errorSintactico(e);
@@ -692,7 +699,10 @@ Attributes expresion() :
 /*operador_relacional : <tIGUAL> | <tMENOR> | <tMAYOR> | <tMEI> | <tMAI> | <tNI> */
 void operador_relacional() :
 {}
-{ try{
+{
+//TODO PARA ADELANTAR A LA GENERACIÓN DE CÓDIGO, NECESITAREMOS PASAR EL TIPO DE OPERACION PARA ARRIBA, PUES SE ESCRIBE
+//todo parametro1 parametro2 operacion
+try{
   <tIGUAL>
 | <tMENOR>
 | <tMAYOR>
@@ -706,13 +716,13 @@ void operador_relacional() :
 
 /* expresion_simple : ( <tSUMA> | <tRESTA> )? termino ( operador_aditivo termino )* */
 Attributes expresion_simple() :
-{Attributes atr_f1=null,atr_f2=null; //TODO: mejor Attributes atr_1=new Attributes(),atr_2=new Attributes();?
+{Attributes atr_f1=null,atr_f2=null;
 boolean positivo_negativo = false;
 boolean operador_booleano = false;}
 {
   try{
-    (<tSUMA>{positivo_negativo = true;} | <tRESTA>{positivo_negativo = true;} )?
-    atr_f1=termino() {if(positivo_negativo) atr_f1.comprobacion_tipo(Symbol.Types.INT); }
+    (<tSUMA> {positivo_negativo = true;} | <tRESTA> {positivo_negativo = true;} )?
+    atr_f1=termino() { if(positivo_negativo) atr_f1.comprobacion_tipo(Symbol.Types.INT); }
     (operador_booleano = operador_aditivo() atr_f2 =termino() { Attributes.comprobacion_tipo(atr_f1,atr_f2,operador_booleano); })*
   }catch(ParseException e) {
 	  errorSintactico(e);
@@ -722,7 +732,10 @@ boolean operador_booleano = false;}
 /* operador_aditivo :=  <tSUMA>| <tRESTA>| <tOR>*/
 boolean operador_aditivo() :
 {}
-{ try{
+{
+//TODO PARA ADELANTAR A LA GENERACIÓN DE CÓDIGO, NECESITAREMOS PASAR EL TIPO DE OPERACION PARA ARRIBA, PUES SE ESCRIBE
+//todo parametro1 parametro2 operacion
+ try{
   <tSUMA>{return(false);}
 | <tRESTA>{return(false);}
 | <tOR> {return(true);}
@@ -748,7 +761,8 @@ boolean operador_booleano = false;}
 /*operador_multiplicativo :=  <tMUL>| <tMOD>| <tDIV>| <tAND>*/
 boolean operador_multiplicativo() :
 {}
-{
+{//TODO PARA ADELANTAR A LA GENERACIÓN DE CÓDIGO, NECESITAREMOS PASAR EL TIPO DE OPERACION PARA ARRIBA, PUES SE ESCRIBE
+//todo parametro1 parametro2 operacion
   try{
   <tMUL> {return false;}
 | <tMOD> {return false;}
@@ -761,7 +775,6 @@ boolean operador_multiplicativo() :
 
 /*factor := <tNOT> factor | <tAP> expresion <tCP> | <tINT2CHAR> <tAP> expresion <tCP> | <tCHAR2INT> <tAP> expresion <tCP>
 | <tID> accion_o_vector | <tCONST_INT>| <tCONST_CHAR>| <tCONST_STRING>| <tTRUE>| <tFALSE>*/
-///TODO CAMBIAR TODO LO REFERENTE A SYMBOL POR ATTRIBUTES
 Attributes factor() :
 {Token t;  Attributes atr_f=null,atr_e;}
 {
@@ -772,17 +785,17 @@ Attributes factor() :
 | <tAP> atr_f = expresion() <tCP>
 | <tINT2CHAR> <tAP> atr_e =expresion() <tCP> {
         if(atr_e.comprobacion_tipo(Symbol.Types.INT)){
-            atr_f = new Attributes(' '); //TODO: ver valor del nuevo atributo char y comprobar valor entero antes conversion
-            //atr_f.type = Symbol.Types.CHAR;
+            //TODO: int tiene que estár tiene que estar entre 0 y 255, se le puede asignar, en vez de ' ' el valor parseado, TE LO PASA ATR_E
+            atr_f = new Attributes(' ');
         }
        }
 | <tCHAR2INT> <tAP> atr_e=expresion() <tCP> {
         if(atr_e.comprobacion_tipo(Symbol.Types.CHAR)){
-            atr_f = new Attributes(0); //TODO: ver valor del nuevo atributo int
-            //atr_f.type = Symbol.Types.INT;
+            //todo: se le puede asignar, en vez de 0 el valor parseado, TE LO PASA ATR_E
+            atr_f = new Attributes(0);
         }
     }
-| t=<tID> atr_f = funcion_o_vector() //TODO: comprobar que el id esta en la tabla    /*llamada a funcion o componente de vector*/
+| t=<tID> atr_f = funcion_o_vector(t) /*llamada a funcion o componente de vector*/
 | t= <tVALORENTERO> { atr_f = new Attributes(Integer.parseInt(t.image));}
 | t= <tVALORCHAR>  { atr_f =new Attributes(t.image.charAt(0));}
 | t= <tVALORCADENA> { atr_f = new Attributes(t.image); }
@@ -796,11 +809,20 @@ Attributes factor() :
 }
 
 /*funcion_o_vector := <tAP> lista_cero_o_mas_exps <tCP> | <tAV> expresion <tCV> | /*epsilon* */
-Attributes funcion_o_vector() : //TODO: revisar tipos
-{Attributes atr=new Attributes();}
-{
-  try{
-  <tAP> (atr= lista_uno_o_mas_exps() )? <tCP> | <tAV> atr = expresion() <tCV> | {} /*epsilon*/
+Attributes funcion_o_vector(Token t) :
+{Attributes atr=new Attributes();
+ Symbol simbolo_del_factor = null;
+    try{
+        simbolo_del_factor = tabla_simbolos.getSymbol(t.image);
+    }catch(SymbolNotFoundException e){
+        ErrorSemantico.deteccion(e, t);
+    }
+}
+{   //TODO UTIL COMO REFERENCIA O REFACTORIZABLE
+  try{//TODO ESTA PARTE SE PUEDE REFACOTIRZAR CON LA INVOCACION DE ARRIBA SEGURAMENTE
+  <tAP> (atr= lista_uno_o_mas_exps(simbolo_del_factor, t) )? <tCP> {atr.comprobaciones_para_acciones_sin_parametros(simbolo_del_factor);} |
+  <tAV> atr = expresion() <tCV>
+  {atr.comprobaciones_para_vectores(simbolo_del_factor);} | {atr.asignar_simbolo(simbolo_del_factor);} /*epsilon*/
  }catch(ParseException e) {
 	errorSintactico(e);
  }finally{
@@ -809,11 +831,35 @@ Attributes funcion_o_vector() : //TODO: revisar tipos
 }
 
 /*lista_uno_o_mas_exps:= expresion() (<tCOMA> expresion())* */
-Attributes lista_uno_o_mas_exps() :
-{Attributes atr=new Attributes();}
+Attributes lista_uno_o_mas_exps(Symbol simbolo_del_factor, Token t) :
+{Attributes atr=new Attributes();
+ int indice_parametro = 0;
+ SymbolFunction simbolo_funcion = null;
+ SymbolProcedure simbolo_procedimiento = null;
+    if(simbolo_del_factor instanceof SymbolFunction){
+        simbolo_funcion = (SymbolFunction) simbolo_del_factor;
+    }else if(simbolo_del_factor instanceof SymbolProcedure){
+        simbolo_procedimiento = (SymbolProcedure) simbolo_del_factor;
+    }else{
+        ErrorSemantico.deteccion("el simbolo encontrado no es ni función ni procedimiento," +
+         " y se esta invocando con parametros", t);
+    }
+}
 {
-  try{ //TODO: ver como comprobar tipo con  *
-  atr = expresion() (<tCOMA> expresion() )*
+  try{
+  atr = expresion()
+    {atr.es_parametro_de_accion(simbolo_funcion, simbolo_procedimiento, indice_parametro);
+    indice_parametro++;}
+  (<tCOMA> atr = expresion()
+   {atr.es_parametro_de_accion(simbolo_funcion, simbolo_procedimiento, indice_parametro);
+     indice_parametro++;}
+  )*
+  { //AL FINAL DEL INTENTO DE INVOCACION, SE TIENE QUE DEVOLVER EL TIPO ESPERANDO
+    if(simbolo_funcion != null && simbolo_procedimiento == null)
+    {
+        atr.type = simbolo_funcion.returnType;
+    }
+  }
  }catch(ParseException e) {
 	errorSintactico(e);
  }finally{return atr; }
