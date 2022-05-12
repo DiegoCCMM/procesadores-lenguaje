@@ -1,7 +1,7 @@
  options {
    IGNORE_CASE = true;
    COMMON_TOKEN_ACTION = false;
-   DEBUG_PARSER = false;
+   DEBUG_PARSER = true;
 }
 
 PARSER_BEGIN(adac)
@@ -51,14 +51,14 @@ public class adac {
   }
 
   static void errorLexico(Token t) {
-    System.err.println("ERROR L�XICO (" + SimpleCharStream.getBeginLine() +
-    ", " + SimpleCharStream.getBeginColumn() + "): s�mbolo no reconocido: <" +
+    System.err.println("ERROR LEXICO (" + SimpleCharStream.getBeginLine() +
+    ", " + SimpleCharStream.getBeginColumn() + "): simbolo no reconocido: <" +
     SimpleCharStream.GetImage().charAt(adacTokenManager.curLexState) + ">");
   }
 
 
   static void errorSintactico(ParseException e){
-    String msg ="ERROR SINT�CTICO (" + e.currentToken.next.beginLine + ", " + e.currentToken.next.beginColumn
+    String msg ="ERROR SINTACTICO (" + e.currentToken.next.beginLine + ", " + e.currentToken.next.beginColumn
      + "): encontrado: <" + e.currentToken.next.image + "> Se esperaba:  ";
      for(int i=0; i< e.expectedTokenSequences.length; i++) {
 		msg+="  " + e.tokenImage[e.expectedTokenSequences[i][0]];
@@ -472,7 +472,7 @@ void sentencia() :
 	| declaracion_accion() <tPC>
 	| seleccion()
 	| mientras_que()
-	| <tRETURN> expresion() <tPC>
+	| <tRETURN> expresion() <tPC> //TODO: solo en funciones
 	}catch(ParseException e) {
 	  panic_mode(tPC);
 	  errorSintactico(e);
@@ -683,17 +683,19 @@ void mientras_que() :
 
 /*expresion := expresion_simple() (operador_relacional() expresion_simple())?*/
 Attributes expresion() :
-{Attributes atr_e1=null,atr_e2=null;}
+{Attributes atr_e1=null,atr_e2=null; Token t=null;}
 { try{
   atr_e1=expresion_simple()
   (
     operador_relacional() atr_e2=expresion_simple()
   {
-     atr_e1.comprobacion_mismo_tipo(atr_e2);
+     t= adac.getToken(0); //TODO: seleccionar token correcto
+     atr_e1.comprobacion_mismo_tipo(atr_e2,t);
+
   })?
    }catch(ParseException e) {
 	errorSintactico(e);
- }finally{return atr_e1; }
+ }finally{return new Attributes(false); } //TODO: siempre devolver false??
 }
 
 /*operador_relacional : <tIGUAL> | <tMENOR> | <tMAYOR> | <tMEI> | <tMAI> | <tNI> */
@@ -718,12 +720,14 @@ try{
 Attributes expresion_simple() :
 {Attributes atr_f1=null,atr_f2=null;
 boolean positivo_negativo = false;
-boolean operador_booleano = false;}
+boolean operador_booleano = false;
+Token t;}
 {
   try{
-    (<tSUMA> {positivo_negativo = true;} | <tRESTA> {positivo_negativo = true;} )?
-    atr_f1=termino() { if(positivo_negativo) atr_f1.comprobacion_tipo(Symbol.Types.INT); }
-    (operador_booleano = operador_aditivo() atr_f2 =termino() { Attributes.comprobacion_tipo(atr_f1,atr_f2,operador_booleano); })*
+    (<tSUMA> {positivo_negativo = true;} | <tRESTA> {positivo_negativo = true;} )? {t = adac.getToken(0);}
+    atr_f1=termino() {  if(positivo_negativo) atr_f1.comprobacion_tipo(Symbol.Types.INT,t); }
+    (operador_booleano = operador_aditivo() atr_f2 =termino() {
+    t = adac.getToken(0); Attributes.comprobacion_tipo(atr_f1,atr_f2,operador_booleano,t); })*
   }catch(ParseException e) {
 	  errorSintactico(e);
   }finally{return atr_f1;}
@@ -747,11 +751,12 @@ boolean operador_aditivo() :
 /*termino := factor ( operador_multiplicativo factor )* */
 Attributes termino() :
 {Attributes atr_f1=null,atr_f2=null;
-boolean operador_booleano = false;}
+boolean operador_booleano = false;
+Token t;}
 {
   try{
-  atr_f1 =factor() (operador_booleano = operador_multiplicativo() atr_f2= factor() {
-     Attributes.comprobacion_tipo(atr_f1, atr_f2, operador_booleano);
+  atr_f1 =factor() (operador_booleano = operador_multiplicativo() atr_f2= factor() {  t = adac.getToken(0);
+     Attributes.comprobacion_tipo(atr_f1, atr_f2, operador_booleano,t);
   })*
  }catch(ParseException e) {
 	errorSintactico(e);
@@ -776,26 +781,35 @@ boolean operador_multiplicativo() :
 /*factor := <tNOT> factor | <tAP> expresion <tCP> | <tINT2CHAR> <tAP> expresion <tCP> | <tCHAR2INT> <tAP> expresion <tCP>
 | <tID> accion_o_vector | <tCONST_INT>| <tCONST_CHAR>| <tCONST_STRING>| <tTRUE>| <tFALSE>*/
 Attributes factor() :
-{Token t;  Attributes atr_f=null,atr_e;}
+{Token t;  Attributes atr_f=null,atr_e; Symbol s=null;}
 {
   try{
-  <tNOT> atr_f = factor(){
-       atr_f.comprobacion_tipo(Symbol.Types.BOOL);
+  <tNOT> atr_f = factor(){  t = adac.getToken(0);
+       atr_f.comprobacion_tipo(Symbol.Types.BOOL,t);
   }
 | <tAP> atr_f = expresion() <tCP>
 | <tINT2CHAR> <tAP> atr_e =expresion() <tCP> {
-        if(atr_e.comprobacion_tipo(Symbol.Types.INT)){
+        t = adac.getToken(0);
+        if(atr_e.comprobacion_tipo(Symbol.Types.INT,t)){
             //TODO: int tiene que estár tiene que estar entre 0 y 255, se le puede asignar, en vez de ' ' el valor parseado, TE LO PASA ATR_E
             atr_f = new Attributes(' ');
         }
        }
 | <tCHAR2INT> <tAP> atr_e=expresion() <tCP> {
-        if(atr_e.comprobacion_tipo(Symbol.Types.CHAR)){
+         t = adac.getToken(0);
+        if(atr_e.comprobacion_tipo(Symbol.Types.CHAR,t)){
             //todo: se le puede asignar, en vez de 0 el valor parseado, TE LO PASA ATR_E
             atr_f = new Attributes(0);
         }
     }
-| t=<tID> atr_f = funcion_o_vector(t) /*llamada a funcion o componente de vector*/
+| t=<tID>{
+    try{
+        s = tabla_simbolos.getSymbol(t.image);
+        atr_f= new Attributes(s);
+    }catch(SymbolNotFoundException e){
+        ErrorSemantico.deteccion(e, t);
+    }
+} atr_f = funcion_o_vector(t) /*llamada a funcion o componente de vector*/ //TODO: consultar en tabla
 | t= <tVALORENTERO> { atr_f = new Attributes(Integer.parseInt(t.image));}
 | t= <tVALORCHAR>  { atr_f =new Attributes(t.image.charAt(0));}
 | t= <tVALORCADENA> { atr_f = new Attributes(t.image); }

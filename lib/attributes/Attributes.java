@@ -9,6 +9,10 @@
 
 package lib.attributes;
 import lib.symbolTable.*;
+import lib.errores.*;
+import traductor.Token;
+
+
 
 public class Attributes implements Cloneable {
     public Symbol.Types type;
@@ -84,7 +88,15 @@ public class Attributes implements Cloneable {
         tamanyo_vector=tam;
         parClass = parameter;
     }
-
+    //Atributo a partir de simbolo
+    public Attributes(Symbol s){
+        type=s.type;
+        parClass=s.parClass;
+        if(s instanceof SymbolArray) tamanyo_vector= ((SymbolArray)s).maxInd -((SymbolArray)s).minInd;
+        if(s instanceof SymbolInt) valInt= ((SymbolInt)s).value;
+        if(s instanceof SymbolChar) valChar= ((SymbolChar)s).value;
+        if(s instanceof SymbolBool) valBool= ((SymbolBool)s).value;
+    }
 
 
     public Attributes clone() {
@@ -98,26 +110,32 @@ public class Attributes implements Cloneable {
 
     public String toString() {
         return
-            "type = " + type + "\n" +
-            "parClass = " + parClass + "\n" ;
-            //COMPLETAR
-        
+                "type = " + type + "\n" +
+                "parClass = " + parClass + "\n" +
+                "valInt = " +  valInt + "\n" +
+                "valChar = " +  valChar + "\n" +
+                "valString = " +  valString + "\n" +
+                "valBool = " +  valBool + "\n" +
+                "tamañoVector = " +  tamanyo_vector + "\n";
     }
 
-    public static void comprobacion_tipo(Attributes atr_1, Attributes atr_2, boolean operador_booleano){
+    //TODO: add token en todas las comprobaciones
+
+    public static void comprobacion_tipo(Attributes atr_1, Attributes atr_2, boolean operador_booleano,Token t){
         if(operador_booleano){
-            atr_1.comprobacion_tipo(Symbol.Types.BOOL);
-            atr_2.comprobacion_tipo(Symbol.Types.BOOL);
+            atr_1.comprobacion_tipo(Symbol.Types.BOOL,t);
+            atr_2.comprobacion_tipo(Symbol.Types.BOOL,t);
         }else{//cualquier otro caso con los operadores aditivos o multiplicativos
-            atr_1.comprobacion_tipo(Symbol.Types.INT);
-            atr_2.comprobacion_tipo(Symbol.Types.INT);
+            atr_1.comprobacion_tipo(Symbol.Types.INT,t);
+            atr_2.comprobacion_tipo(Symbol.Types.INT,t);
         }
     }
 
     /* Comprobracion del tipo de dato|variable|expresion */
-    public boolean comprobacion_tipo(Symbol.Types tipo_esperado){
+    public boolean comprobacion_tipo(Symbol.Types tipo_esperado,Token t){
         if(this.type != tipo_esperado){
-            System.out.println("INCOMPATIBILIDAD DE TIPOS: Se esperaba un dato de tipo "+ tipo_esperado);
+            System.err.println("Atributo ("+ t.beginLine +"): "+ this.toString() );
+             ErrorSemantico.deteccion("INCOMPATIBILIDAD DE TIPOS: Se esperaba un dato de tipo "+ tipo_esperado,t);
             this.type=tipo_esperado;
             return(false);
         }
@@ -126,9 +144,9 @@ public class Attributes implements Cloneable {
 
 
     /* Comprobacion del tipo en operadores relacionales */
-    public void comprobacion_mismo_tipo(Attributes sim){
+    public void comprobacion_mismo_tipo(Attributes sim,Token t){
         if(this.type != sim.type){
-            System.out.println("No se pueden comparar tipos distintos");
+            ErrorSemantico.deteccion("No se pueden comparar tipos distintos",t);
         }
     }
 
@@ -137,7 +155,8 @@ public class Attributes implements Cloneable {
     }
 
     public void comprobaciones_para_vectores(Symbol simbolo_del_factor){
-        if(this.comprobacion_tipo(Symbol.Types.INT)){   //el indice tiene que ser un entero
+        Token t=null; //TODO: pasar como parametro
+        if(this.comprobacion_tipo(Symbol.Types.INT,t)){   //el indice tiene que ser un entero
             if(simbolo_del_factor != null && simbolo_del_factor instanceof SymbolArray) {   //el simbolo se tiene que poder transformar a un array
                 if (((SymbolArray) simbolo_del_factor).maxInd > this.valInt && ((SymbolArray) simbolo_del_factor).minInd <= this.valInt) {  //el indice tiene que estar entre el tamaño del vector
                     this.type = ((SymbolArray) simbolo_del_factor).baseType;

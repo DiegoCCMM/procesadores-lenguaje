@@ -14,7 +14,7 @@ import traductor.Token;
 import lib.symbolTable.exceptions.*; 
 
 public class ErrorSemantico {
-	final static String sep = "*************************************************************************";
+	final static String sep = "***********************************************************************************";
 
 	public ErrorSemantico() {}
 
