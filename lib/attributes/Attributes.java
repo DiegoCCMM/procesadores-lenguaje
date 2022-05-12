@@ -17,6 +17,7 @@ import traductor.Token;
 public class Attributes implements Cloneable {
     public Symbol.Types type;
     public Symbol.ParameterClass parClass;
+    public Symbol referencia_simbolo;
 
     public int valInt;
     public boolean valBool;
@@ -96,6 +97,7 @@ public class Attributes implements Cloneable {
         if(s instanceof SymbolInt) valInt= ((SymbolInt)s).value;
         if(s instanceof SymbolChar) valChar= ((SymbolChar)s).value;
         if(s instanceof SymbolBool) valBool= ((SymbolBool)s).value;
+        referencia_simbolo=s;
     }
 
 
@@ -109,6 +111,8 @@ public class Attributes implements Cloneable {
     }
 
     public String toString() {
+        String simbolo="";
+        if(referencia_simbolo!=null) simbolo= referencia_simbolo.name;
         return
                 "type = " + type + "\n" +
                 "parClass = " + parClass + "\n" +
@@ -116,7 +120,8 @@ public class Attributes implements Cloneable {
                 "valChar = " +  valChar + "\n" +
                 "valString = " +  valString + "\n" +
                 "valBool = " +  valBool + "\n" +
-                "tamañoVector = " +  tamanyo_vector + "\n";
+                "tamañoVector = " +  tamanyo_vector + "\n"+
+                "simbolo = " +  simbolo + "\n";
     }
 
     //TODO: add token en todas las comprobaciones
@@ -191,6 +196,7 @@ public class Attributes implements Cloneable {
         }else if(simbolo_del_factor.type == Symbol.Types.UNDEFINED){
             System.out.println("El atributo pasa a ser un no definido"); //TODO WARNING
         }
+        referencia_simbolo=simbolo_del_factor;
     }
 
     public void es_parametro_de_accion(SymbolFunction simbolo_funcion, SymbolProcedure simbolo_procedimiento, int indice){

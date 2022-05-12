@@ -314,7 +314,9 @@ void declaracion_funcion() :
 {}
 {
 	try {
-  cabecera_funcion() declaracion_variables() bloque_sentencias()
+  cabecera_funcion() declaracion_variables() {
+    System.err.println(tabla_simbolos.toString());
+  }bloque_sentencias() {tabla_simbolos.removeBlock();}
    }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -345,7 +347,9 @@ SymbolFunction simbolo_funcion;}
 void declaracion_proc() :
 {}
 { try{
-  cabecera_proc() declaracion_variables() bloque_sentencias()
+  cabecera_proc() declaracion_variables() {
+  System.err.println(tabla_simbolos.toString());
+  }bloque_sentencias() {tabla_simbolos.removeBlock();}
    }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -690,12 +694,15 @@ Attributes expresion() :
     operador_relacional() atr_e2=expresion_simple()
   {
      t= adac.getToken(0); //TODO: seleccionar token correcto
+     System.err.println("Atributo 1:" + atr_e1.toString());
+     System.err.println("Atributo 2:" + atr_e2.toString());
      atr_e1.comprobacion_mismo_tipo(atr_e2,t);
 
   })?
    }catch(ParseException e) {
 	errorSintactico(e);
- }finally{return new Attributes(false); } //TODO: siempre devolver false??
+ }finally{if(atr_e2 != null)return new Attributes(false);
+  else return atr_e1;}
 }
 
 /*operador_relacional : <tIGUAL> | <tMENOR> | <tMAYOR> | <tMEI> | <tMAI> | <tNI> */
@@ -802,14 +809,7 @@ Attributes factor() :
             atr_f = new Attributes(0);
         }
     }
-| t=<tID>{
-    try{
-        s = tabla_simbolos.getSymbol(t.image);
-        atr_f= new Attributes(s);
-    }catch(SymbolNotFoundException e){
-        ErrorSemantico.deteccion(e, t);
-    }
-} atr_f = funcion_o_vector(t) /*llamada a funcion o componente de vector*/ //TODO: consultar en tabla
+| t=<tID> atr_f = funcion_o_vector(t) /*llamada a funcion o componente de vector*/
 | t= <tVALORENTERO> { atr_f = new Attributes(Integer.parseInt(t.image));}
 | t= <tVALORCHAR>  { atr_f =new Attributes(t.image.charAt(0));}
 | t= <tVALORCADENA> { atr_f = new Attributes(t.image); }
@@ -834,7 +834,7 @@ Attributes funcion_o_vector(Token t) :
 }
 {   //TODO UTIL COMO REFERENCIA O REFACTORIZABLE
   try{//TODO ESTA PARTE SE PUEDE REFACOTIRZAR CON LA INVOCACION DE ARRIBA SEGURAMENTE
-  <tAP> (atr= lista_uno_o_mas_exps(simbolo_del_factor, t) )? <tCP> {atr.comprobaciones_para_acciones_sin_parametros(simbolo_del_factor);} |
+  <tAP> (atr= lista_uno_o_mas_exps(simbolo_del_factor, t) )? <tCP> {if(atr.type == Symbol.Types.UNDEFINED) atr.comprobaciones_para_acciones_sin_parametros(simbolo_del_factor);} |
   <tAV> atr = expresion() <tCV>
   {atr.comprobaciones_para_vectores(simbolo_del_factor);} | {atr.asignar_simbolo(simbolo_del_factor);} /*epsilon*/
  }catch(ParseException e) {
