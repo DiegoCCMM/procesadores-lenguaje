@@ -88,5 +88,28 @@ public class SemanticFunctions {
         }
 
     }
+    public static void comprobacion_numero_argumentos(SymbolFunction simbolo_funcion, SymbolProcedure simbolo_procedimiento,
+                                       int indice, Token t ){
+         if (simbolo_funcion != null && simbolo_funcion.parList.size() > indice) { //funcion
+             ErrorSemantico.deteccion("No se han proporcionado suficientes argumentos (recibidos "+
+                     (indice) + ", esperados " + simbolo_funcion.parList.size() + ")",t);
+         } else if(simbolo_procedimiento != null && simbolo_procedimiento.parList.size() > indice ){//procedimiento
+             ErrorSemantico.deteccion("No se han proporcionado suficientes argumentos (recibidos " +
+                     (indice) + ", esperados " + simbolo_procedimiento.parList.size() + ")",t);
+         }
+    }
 
+    public static void comprobaciones_para_acciones_sin_parametros(Symbol accion, Token t){
+        //TODO COMPROBAR QUE TIPO TIENE LA ACCION, Y SI TIENE LA LISTA DE PARAMETROS CON NOT EMPTY -> ERROR
+        int dim=0;
+        if(accion instanceof SymbolFunction){
+            dim = ((SymbolFunction) accion).parList.size();
+        }
+        if(accion instanceof SymbolProcedure){
+            dim = ((SymbolProcedure) accion).parList.size();
+        }
+        if(dim!= 0){
+            ErrorSemantico.deteccion("No se ha proporcionado ningún argumento (esperados "+ dim + ")",t);
+        }
+    }
 }

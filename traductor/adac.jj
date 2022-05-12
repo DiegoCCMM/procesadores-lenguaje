@@ -46,7 +46,7 @@ public class adac {
     catch(ParseException e) {
 		//errorSintactico(e);
    }
-  System.out.println(tabla_simbolos.toString());
+  //System.out.println(tabla_simbolos.toString());
    System.out.println("FIN");
   }
 
@@ -315,7 +315,7 @@ void declaracion_funcion() :
 {
 	try {
   cabecera_funcion() declaracion_variables() {
-    System.err.println(tabla_simbolos.toString());
+  //  System.err.println(tabla_simbolos.toString());
   }bloque_sentencias() {tabla_simbolos.removeBlock();}
    }catch(ParseException e) {
 	errorSintactico(e);
@@ -348,7 +348,7 @@ void declaracion_proc() :
 {}
 { try{
   cabecera_proc() declaracion_variables() {
-  System.err.println(tabla_simbolos.toString());
+  //System.err.println(tabla_simbolos.toString());
   }bloque_sentencias() {tabla_simbolos.removeBlock();}
    }catch(ParseException e) {
 	errorSintactico(e);
@@ -588,7 +588,7 @@ void lista_escribiblesRec() :
 
 /*asignacion ::= var_asignacion <tOPAS> expresion*/
 void asignacion() :
-{}
+{Attributes atr_v=null, atr_e=null;}
 { try{
     //TODO FALTA EL SEMÁNTICO, HAY QUE COMPROBAR QUE EL ID DEL VAR ASIGNACIÓN EXISTE, SI EXISTE,
     //todo se comprueba si el attributes tiene el mismo tipo, sino, errorsemantico
@@ -624,45 +624,53 @@ void var_vector() :
 
 /*invocacion_procedimiento ::= <tID> argumentos <tPC> */
 void invocacion_procedimiento() : /*IMPORTANTE TIENE QUE SER PROCEDIMIENTO EN EL SEMANTICO*/
-{}
+{ Token t;
+ Symbol simbolo_del_factor = null;
+ }
 {   //todo comprobar que esta en la tabla de simbolos, pasar el simbolo a los argumentos y ver que los parametros cumplen
     //todo los requisitos de tipo y orden, tienes funciones en attributes que se usan para resolver las funciones, en funciones y vector
     //todo mira a ver de generalizar estas invocaciones de procedimiento a funciones también
     //
 	  try {
-	  	<tID> argumentos() <tPC>
+	  	t =<tID>{
+	  	 try{
+        simbolo_del_factor = tabla_simbolos.getSymbol(t.image);
+    }catch(SymbolNotFoundException e){
+        ErrorSemantico.deteccion(e, t);
+    }
+	  	} argumentos(simbolo_del_factor,t) <tPC>
 	  }catch(ParseException e) {
 		  panic_mode(tPC);
 		  errorSintactico(e);
 	  }
 }
-
+//TODO: devolver attributes para ver si tiene parametros
 /*argumentos ::= <tAP> ( lista_expresiones )? <tCP> */
-void argumentos() :
-{}
+void argumentos(Symbol simbolo_del_factor, Token t) :
+{Attributes atr=new Attributes();}
 { try{
-  <tAP> (lista_expresiones())? <tCP>
+  <tAP> (atr=lista_uno_o_mas_exps(simbolo_del_factor,t) )? <tCP>
  }catch(ParseException e) {
 	errorSintactico(e);
  }
 }
 
-/*lista_expresiones ::= expresion (<tCOMA> expresion)* */
-void lista_expresiones() :
-{}
-{ try{  //TODO refactoriza y reutiliza esto o lista_uno_o_mas_exps, porque hacen lo mismo
-  expresion() (<tCOMA> expresion())*
- }catch(ParseException e) {
-	errorSintactico(e);
- }
-}
+///*lista_expresiones ::= expresion (<tCOMA> expresion)* */
+//void lista_expresiones() :
+//{}
+//{ try{  //TODO refactoriza y reutiliza esto o lista_uno_o_mas_exps, porque hacen lo mismo
+//  expresion() (<tCOMA> expresion())*
+// }catch(ParseException e) {
+//	errorSintactico(e);
+// }
+//}
 
 /*seleccion ::= <tIF> expresion <tTHEN> lista_sentencias (<tELSE> lista_sentencias)? <tEND>*/
 void seleccion() :
-{}
-{   //TODO EXPRESION DEVUELVE BOOLEANO
+{Attributes atr_e=null;}
+{
   try {
-	  <tIF> expresion() <tTHEN> lista_sentencias()
+	  <tIF> atr_e =expresion() { atr_e.comprobacion_tipo(Symbol.Types.BOOL,token);}<tTHEN> lista_sentencias()
 	  (
 	    <tELSE> lista_sentencias()
 	  )?
@@ -675,10 +683,10 @@ void seleccion() :
 
 /*mientras_que ::= <tWHILE> expresion <tDO> lista_sentencias <tEND>*/
 void mientras_que() :
-{}
+{Attributes atr_e=null;}
 {
-  try { //TODO EXPRESION DEVUELVE BOOLEANO
-  	<tWHILE> expresion() <tDO> lista_sentencias() <tEND>
+  try {
+  	<tWHILE> atr_e=expresion() { atr_e.comprobacion_tipo(Symbol.Types.BOOL,token);} <tDO> lista_sentencias() <tEND>
   }catch(ParseException e) {
 	  panic_mode(tEND);
 	  errorSintactico(e);
@@ -687,16 +695,15 @@ void mientras_que() :
 
 /*expresion := expresion_simple() (operador_relacional() expresion_simple())?*/
 Attributes expresion() :
-{Attributes atr_e1=null,atr_e2=null; Token t=null;}
+{Attributes atr_e1=null,atr_e2=null;}
 { try{
   atr_e1=expresion_simple()
   (
     operador_relacional() atr_e2=expresion_simple()
   {
-     t= adac.getToken(0); //TODO: seleccionar token correcto
-     System.err.println("Atributo 1:" + atr_e1.toString());
-     System.err.println("Atributo 2:" + atr_e2.toString());
-     atr_e1.comprobacion_mismo_tipo(atr_e2,t);
+//     System.err.println("Atributo 1:" + atr_e1.toString());
+//     System.err.println("Atributo 2:" + atr_e2.toString());
+     atr_e1.comprobacion_mismo_tipo(atr_e2,token);
 
   })?
    }catch(ParseException e) {
@@ -727,14 +734,12 @@ try{
 Attributes expresion_simple() :
 {Attributes atr_f1=null,atr_f2=null;
 boolean positivo_negativo = false;
-boolean operador_booleano = false;
-Token t;}
+boolean operador_booleano = false;}
 {
   try{
-    (<tSUMA> {positivo_negativo = true;} | <tRESTA> {positivo_negativo = true;} )? {t = adac.getToken(0);}
-    atr_f1=termino() {  if(positivo_negativo) atr_f1.comprobacion_tipo(Symbol.Types.INT,t); }
-    (operador_booleano = operador_aditivo() atr_f2 =termino() {
-    t = adac.getToken(0); Attributes.comprobacion_tipo(atr_f1,atr_f2,operador_booleano,t); })*
+    (<tSUMA> {positivo_negativo = true;} | <tRESTA> {positivo_negativo = true;} )?
+    atr_f1=termino() {  if(positivo_negativo) atr_f1.comprobacion_tipo(Symbol.Types.INT,token); }
+    (operador_booleano = operador_aditivo() atr_f2 =termino() {Attributes.comprobacion_tipo(atr_f1,atr_f2,operador_booleano,token); })*
   }catch(ParseException e) {
 	  errorSintactico(e);
   }finally{return atr_f1;}
@@ -758,12 +763,11 @@ boolean operador_aditivo() :
 /*termino := factor ( operador_multiplicativo factor )* */
 Attributes termino() :
 {Attributes atr_f1=null,atr_f2=null;
-boolean operador_booleano = false;
-Token t;}
+boolean operador_booleano = false;}
 {
   try{
-  atr_f1 =factor() (operador_booleano = operador_multiplicativo() atr_f2= factor() {  t = adac.getToken(0);
-     Attributes.comprobacion_tipo(atr_f1, atr_f2, operador_booleano,t);
+  atr_f1 =factor() (operador_booleano = operador_multiplicativo() atr_f2= factor() {
+     Attributes.comprobacion_tipo(atr_f1, atr_f2, operador_booleano,token);
   })*
  }catch(ParseException e) {
 	errorSintactico(e);
@@ -791,21 +795,18 @@ Attributes factor() :
 {Token t;  Attributes atr_f=null,atr_e; Symbol s=null;}
 {
   try{
-  <tNOT> atr_f = factor(){  t = adac.getToken(0);
-       atr_f.comprobacion_tipo(Symbol.Types.BOOL,t);
+  <tNOT> atr_f = factor(){
+       atr_f.comprobacion_tipo(Symbol.Types.BOOL,token);
   }
 | <tAP> atr_f = expresion() <tCP>
 | <tINT2CHAR> <tAP> atr_e =expresion() <tCP> {
-        t = adac.getToken(0);
-        if(atr_e.comprobacion_tipo(Symbol.Types.INT,t)){
-            //TODO: int tiene que estár tiene que estar entre 0 y 255, se le puede asignar, en vez de ' ' el valor parseado, TE LO PASA ATR_E
+        if(atr_e.comprobacion_tipo(Symbol.Types.INT,token)){
+            //TODO: int tiene que estár tiene que estar entre 0 y 255 - GC
             atr_f = new Attributes(' ');
         }
        }
 | <tCHAR2INT> <tAP> atr_e=expresion() <tCP> {
-         t = adac.getToken(0);
-        if(atr_e.comprobacion_tipo(Symbol.Types.CHAR,t)){
-            //todo: se le puede asignar, en vez de 0 el valor parseado, TE LO PASA ATR_E
+        if(atr_e.comprobacion_tipo(Symbol.Types.CHAR,token)){
             atr_f = new Attributes(0);
         }
     }
@@ -834,7 +835,11 @@ Attributes funcion_o_vector(Token t) :
 }
 {   //TODO UTIL COMO REFERENCIA O REFACTORIZABLE
   try{//TODO ESTA PARTE SE PUEDE REFACOTIRZAR CON LA INVOCACION DE ARRIBA SEGURAMENTE
-  <tAP> (atr= lista_uno_o_mas_exps(simbolo_del_factor, t) )? <tCP> {if(atr.type == Symbol.Types.UNDEFINED) atr.comprobaciones_para_acciones_sin_parametros(simbolo_del_factor);} |
+  <tAP> {atr=null;}(atr= lista_uno_o_mas_exps(simbolo_del_factor, t) )? <tCP> {
+  if(atr==null)
+    SemanticFunctions.comprobaciones_para_acciones_sin_parametros(simbolo_del_factor,t);
+  atr = new Attributes(); atr.atributo_desde_accion(simbolo_del_factor);
+  } |
   <tAV> atr = expresion() <tCV>
   {atr.comprobaciones_para_vectores(simbolo_del_factor);} | {atr.asignar_simbolo(simbolo_del_factor);} /*epsilon*/
  }catch(ParseException e) {
@@ -862,12 +867,15 @@ Attributes lista_uno_o_mas_exps(Symbol simbolo_del_factor, Token t) :
 {
   try{
   atr = expresion()
-    {atr.es_parametro_de_accion(simbolo_funcion, simbolo_procedimiento, indice_parametro);
+    { atr.es_parametro_de_accion(simbolo_funcion, simbolo_procedimiento, indice_parametro,t);
     indice_parametro++;}
   (<tCOMA> atr = expresion()
-   {atr.es_parametro_de_accion(simbolo_funcion, simbolo_procedimiento, indice_parametro);
-     indice_parametro++;}
-  )*
+   {
+    atr.es_parametro_de_accion(simbolo_funcion, simbolo_procedimiento, indice_parametro,t);
+    indice_parametro++;}
+  )*{
+     SemanticFunctions.comprobacion_numero_argumentos(simbolo_funcion, simbolo_procedimiento, indice_parametro,t);
+  }
   { //AL FINAL DEL INTENTO DE INVOCACION, SE TIENE QUE DEVOLVER EL TIPO ESPERANDO
     if(simbolo_funcion != null && simbolo_procedimiento == null)
     {

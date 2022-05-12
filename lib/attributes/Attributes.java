@@ -155,9 +155,7 @@ public class Attributes implements Cloneable {
         }
     }
 
-    public void comprobaciones_para_acciones_sin_parametros(Symbol accion){
-        //TODO COMPROBAR QUE TIPO TIENE LA ACCION, Y SI TIENE LA LISTA DE PARAMETROS CON NOT EMPTY -> ERROR
-    }
+
 
     public void comprobaciones_para_vectores(Symbol simbolo_del_factor){
         Token t=null; //TODO: pasar como parametro
@@ -199,21 +197,34 @@ public class Attributes implements Cloneable {
         referencia_simbolo=simbolo_del_factor;
     }
 
-    public void es_parametro_de_accion(SymbolFunction simbolo_funcion, SymbolProcedure simbolo_procedimiento, int indice){
-        if(simbolo_funcion != null){
-            //utilizar simbolo_funcion
-            Symbol.Types tipo_parametro = simbolo_funcion.parList.get(indice).type;
-            if(this.type != tipo_parametro){
-                System.out.println("El parametro con el que se esta invocando a la funcion es erroneo");
+    public void es_parametro_de_accion(SymbolFunction simbolo_funcion, SymbolProcedure simbolo_procedimiento,
+                                       int indice, Token t){
+        int esperados=-1;
+        try {
+            if (simbolo_funcion != null) {
+                //utilizar simbolo_funcion
+                esperados= simbolo_funcion.parList.size();
+                Symbol.Types tipo_parametro = simbolo_funcion.parList.get(indice).type;
+                if (this.type != tipo_parametro) {
+                    System.out.println("El parametro con el que se esta invocando a la funcion es erroneo");
+                }
+            } else {
+                //utilizar simbolo_procedimiento
+                Symbol.Types tipo_parametro = simbolo_procedimiento.parList.get(indice).type;
+                esperados= simbolo_procedimiento.parList.size();
+                System.out.println("----" + simbolo_funcion.parList.get(indice) + " " + indice + "----------");
+                if (this.type != tipo_parametro) {
+                    System.out.println("El parametro con el que se esta invocando al procedimiento es erroneo");
+                }
             }
-        }else{
-            //utilizar simbolo_procedimiento
-            Symbol.Types tipo_parametro = simbolo_procedimiento.parList.get(indice).type;
-            if(this.type != tipo_parametro){
-                System.out.println("El parametro con el que se esta invocando al procedimiento es erroneo");
-            }
+        }catch (IndexOutOfBoundsException e){
+            ErrorSemantico.deteccion("Se han proporcionado demasiados argumentos (recibidos "+
+                     (indice + 1) + ", esperados " + esperados + ")",t);
         }
         //NO DEBERIA PODER SER AMBAS COSAS A LA VEZ
+    }
+    public void atributo_desde_accion(Symbol action){
+        //TODO cast y asignar return type al tyype del atributo
     }
 
 }
