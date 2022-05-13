@@ -17,7 +17,7 @@ import traductor.Token;
 public class Attributes implements Cloneable {
     public Symbol.Types type;
     public Symbol.ParameterClass parClass;
-    public Symbol referencia_simbolo;
+    public Symbol referencia_simbolo = null;
 
     public int valInt;
     public boolean valBool;
@@ -124,7 +124,7 @@ public class Attributes implements Cloneable {
                 "simbolo = " +  simbolo + "\n";
     }
 
-    //TODO: add token en todas las comprobaciones
+
 
     public static void comprobacion_tipo(Attributes atr_1, Attributes atr_2, boolean operador_booleano,Token t){
         if(operador_booleano){
@@ -152,21 +152,24 @@ public class Attributes implements Cloneable {
     public void comprobacion_mismo_tipo(Attributes sim,Token t){
         if(this.type != sim.type){
             ErrorSemantico.deteccion("No se pueden comparar tipos distintos",t);
+        }else if(this.type == Symbol.Types.ARRAY){
+            ErrorSemantico.deteccion("No se puede operar con vectores",t);
+        }
+        if(referencia_simbolo != null){
+            referencia_simbolo = null;
         }
     }
 
 
-
-    public void comprobaciones_para_vectores(Symbol simbolo_del_factor){
-        Token t=null; //TODO: pasar como parametro
+    public void comprobaciones_para_vectores(Symbol simbolo_del_factor, Token t){
         if(this.comprobacion_tipo(Symbol.Types.INT,t)){   //el indice tiene que ser un entero
             if(simbolo_del_factor != null && simbolo_del_factor instanceof SymbolArray) {   //el simbolo se tiene que poder transformar a un array
-                if (((SymbolArray) simbolo_del_factor).maxInd > this.valInt && ((SymbolArray) simbolo_del_factor).minInd <= this.valInt) {  //el indice tiene que estar entre el tamaño del vector
+                /*if (((SymbolArray) simbolo_del_factor).maxInd > this.valInt && ((SymbolArray) simbolo_del_factor).minInd <= this.valInt) {  //el indice tiene que estar entre el tamaño del vector
                     this.type = ((SymbolArray) simbolo_del_factor).baseType;
                 }else{
                     System.out.println("El indice tiene que ser menor que " + ((SymbolArray) simbolo_del_factor).maxInd + " y mayor o igual a "+((SymbolArray) simbolo_del_factor).minInd);
                     System.out.println("El indice recibido es " + this.valInt);
-                }
+                }*/
             }
         }else{
             System.out.println("Para indexar un vector se necesita un valor entero");
@@ -204,27 +207,33 @@ public class Attributes implements Cloneable {
             if (simbolo_funcion != null) {
                 //utilizar simbolo_funcion
                 esperados= simbolo_funcion.parList.size();
-                Symbol.Types tipo_parametro = simbolo_funcion.parList.get(indice).type;
-                if (this.type != tipo_parametro) {
-                    System.out.println("El parametro con el que se esta invocando a la funcion es erroneo");
-                }
+                Symbol simbolo = simbolo_funcion.parList.get(indice);
+                comprobaciones_parametros(simbolo);
             } else {
                 //utilizar simbolo_procedimiento
-                Symbol.Types tipo_parametro = simbolo_procedimiento.parList.get(indice).type;
                 esperados= simbolo_procedimiento.parList.size();
-                System.out.println("----" + simbolo_funcion.parList.get(indice) + " " + indice + "----------");
-                if (this.type != tipo_parametro) {
-                    System.out.println("El parametro con el que se esta invocando al procedimiento es erroneo");
-                }
+                Symbol simbolo = simbolo_procedimiento.parList.get(indice);
+                comprobaciones_parametros(simbolo);
             }
         }catch (IndexOutOfBoundsException e){
             ErrorSemantico.deteccion("Se han proporcionado demasiados argumentos (recibidos "+
                      (indice + 1) + ", esperados " + esperados + ")",t);
         }
-        //NO DEBERIA PODER SER AMBAS COSAS A LA VEZ
     }
-    public void atributo_desde_accion(Symbol action){
-        //TODO cast y asignar return type al tyype del atributo
+
+    private void comprobaciones_parametros(Symbol simbolo) {
+        if (this.type != simbolo.type) {
+            System.out.println("El parametro con el que se esta invocando a la funcion es erroneo");
+        }else if(simbolo.parClass == Symbol.ParameterClass.REF && this.referencia_simbolo == null){
+            System.out.println("Se esperaba una variable, se ha obtenido una constante");
+        }
+    }
+
+    public void returnType_al_tipo(Symbol action){
+        if(action instanceof SymbolFunction){
+            this.type = ((SymbolFunction)action).returnType;
+        }
+
     }
 
 }

@@ -625,31 +625,31 @@ void var_vector() :
 /*invocacion_procedimiento ::= <tID> argumentos <tPC> */
 void invocacion_procedimiento() : /*IMPORTANTE TIENE QUE SER PROCEDIMIENTO EN EL SEMANTICO*/
 { Token t;
- Symbol simbolo_del_factor = null;
+ Symbol simbolo_proc = null;
  }
-{   //todo comprobar que esta en la tabla de simbolos, pasar el simbolo a los argumentos y ver que los parametros cumplen
-    //todo los requisitos de tipo y orden, tienes funciones en attributes que se usan para resolver las funciones, en funciones y vector
-    //todo mira a ver de generalizar estas invocaciones de procedimiento a funciones también
-    //
+{
 	  try {
 	  	t =<tID>{
 	  	 try{
-        simbolo_del_factor = tabla_simbolos.getSymbol(t.image);
+            simbolo_proc = tabla_simbolos.getSymbol(t.image);
     }catch(SymbolNotFoundException e){
         ErrorSemantico.deteccion(e, t);
     }
-	  	} argumentos(simbolo_del_factor,t) <tPC>
+	  	} argumentos(simbolo_proc,t) <tPC>
 	  }catch(ParseException e) {
 		  panic_mode(tPC);
 		  errorSintactico(e);
 	  }
 }
-//TODO: devolver attributes para ver si tiene parametros
 /*argumentos ::= <tAP> ( lista_expresiones )? <tCP> */
-void argumentos(Symbol simbolo_del_factor, Token t) :
-{Attributes atr=new Attributes();}
+void argumentos(Symbol simbolo_proc, Token t) :
+{Attributes atr = null;}
 { try{
-  <tAP> (atr=lista_uno_o_mas_exps(simbolo_del_factor,t) )? <tCP>
+  <tAP> (atr=lista_uno_o_mas_exps(simbolo_proc,t) )? <tCP>
+    {   if(atr == null){
+            SemanticFunctions.comprobaciones_para_acciones_sin_parametros(simbolo_proc, t);
+        }
+    }
  }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -658,7 +658,7 @@ void argumentos(Symbol simbolo_del_factor, Token t) :
 ///*lista_expresiones ::= expresion (<tCOMA> expresion)* */
 //void lista_expresiones() :
 //{}
-//{ try{  //TODO refactoriza y reutiliza esto o lista_uno_o_mas_exps, porque hacen lo mismo
+//{ try{
 //  expresion() (<tCOMA> expresion())*
 // }catch(ParseException e) {
 //	errorSintactico(e);
@@ -704,7 +704,6 @@ Attributes expresion() :
 //     System.err.println("Atributo 1:" + atr_e1.toString());
 //     System.err.println("Atributo 2:" + atr_e2.toString());
      atr_e1.comprobacion_mismo_tipo(atr_e2,token);
-
   })?
    }catch(ParseException e) {
 	errorSintactico(e);
@@ -833,15 +832,15 @@ Attributes funcion_o_vector(Token t) :
         ErrorSemantico.deteccion(e, t);
     }
 }
-{   //TODO UTIL COMO REFERENCIA O REFACTORIZABLE
-  try{//TODO ESTA PARTE SE PUEDE REFACOTIRZAR CON LA INVOCACION DE ARRIBA SEGURAMENTE
+{
+  try{
   <tAP> {atr=null;}(atr= lista_uno_o_mas_exps(simbolo_del_factor, t) )? <tCP> {
-  if(atr==null)
-    SemanticFunctions.comprobaciones_para_acciones_sin_parametros(simbolo_del_factor,t);
-  atr = new Attributes(); atr.atributo_desde_accion(simbolo_del_factor);
+    if(atr==null)
+        SemanticFunctions.comprobaciones_para_acciones_sin_parametros(simbolo_del_factor,t);
+    atr = new Attributes(); atr.returnType_al_tipo(simbolo_del_factor);
   } |
   <tAV> atr = expresion() <tCV>
-  {atr.comprobaciones_para_vectores(simbolo_del_factor);} | {atr.asignar_simbolo(simbolo_del_factor);} /*epsilon*/
+  {atr.comprobaciones_para_vectores(simbolo_del_factor, t);} | {atr.asignar_simbolo(simbolo_del_factor);} /*epsilon*/
  }catch(ParseException e) {
 	errorSintactico(e);
  }finally{
@@ -850,15 +849,15 @@ Attributes funcion_o_vector(Token t) :
 }
 
 /*lista_uno_o_mas_exps:= expresion() (<tCOMA> expresion())* */
-Attributes lista_uno_o_mas_exps(Symbol simbolo_del_factor, Token t) :
+Attributes lista_uno_o_mas_exps(Symbol simbolo_de_la_accion, Token t) :
 {Attributes atr=new Attributes();
  int indice_parametro = 0;
  SymbolFunction simbolo_funcion = null;
  SymbolProcedure simbolo_procedimiento = null;
-    if(simbolo_del_factor instanceof SymbolFunction){
-        simbolo_funcion = (SymbolFunction) simbolo_del_factor;
-    }else if(simbolo_del_factor instanceof SymbolProcedure){
-        simbolo_procedimiento = (SymbolProcedure) simbolo_del_factor;
+    if(simbolo_de_la_accion instanceof SymbolFunction){
+        simbolo_funcion = (SymbolFunction) simbolo_de_la_accion;
+    }else if(simbolo_de_la_accion instanceof SymbolProcedure){
+        simbolo_procedimiento = (SymbolProcedure) simbolo_de_la_accion;
     }else{
         ErrorSemantico.deteccion("el simbolo encontrado no es ni función ni procedimiento," +
          " y se esta invocando con parametros", t);
@@ -875,12 +874,6 @@ Attributes lista_uno_o_mas_exps(Symbol simbolo_del_factor, Token t) :
     indice_parametro++;}
   )*{
      SemanticFunctions.comprobacion_numero_argumentos(simbolo_funcion, simbolo_procedimiento, indice_parametro,t);
-  }
-  { //AL FINAL DEL INTENTO DE INVOCACION, SE TIENE QUE DEVOLVER EL TIPO ESPERANDO
-    if(simbolo_funcion != null && simbolo_procedimiento == null)
-    {
-        atr.type = simbolo_funcion.returnType;
-    }
   }
  }catch(ParseException e) {
 	errorSintactico(e);

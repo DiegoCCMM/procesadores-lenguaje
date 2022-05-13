@@ -100,15 +100,13 @@ public class SemanticFunctions {
     }
 
     public static void comprobaciones_para_acciones_sin_parametros(Symbol accion, Token t){
-        //TODO COMPROBAR QUE TIPO TIENE LA ACCION, Y SI TIENE LA LISTA DE PARAMETROS CON NOT EMPTY -> ERROR
         int dim=0;
-        if(accion instanceof SymbolFunction){
+        if(accion instanceof SymbolFunction) {
             dim = ((SymbolFunction) accion).parList.size();
-        }
-        if(accion instanceof SymbolProcedure){
+        }else if(accion instanceof SymbolProcedure){
             dim = ((SymbolProcedure) accion).parList.size();
         }
-        if(dim!= 0){
+        if(dim > 0){
             ErrorSemantico.deteccion("No se ha proporcionado ningún argumento (esperados "+ dim + ")",t);
         }
     }
