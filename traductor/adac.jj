@@ -20,6 +20,7 @@ public class adac {
    static SymbolTable tabla_simbolos = new SymbolTable();
    static SemanticFunctions SemFunc = new SemanticFunctions();
    static ErrorSemantico ErrorSemantico = new ErrorSemantico();
+   static Symbol.Types tipo_funcion = null;
 
     public static void main(String [] args)
   {
@@ -313,12 +314,16 @@ void declaracion_accion() :
 
 /*declaracion_funcion ::= cabecera_funcion declaracion_variables bloque_sentencias*/
 void declaracion_funcion() :
-{}
+{Token token;}
 {
 	try {
-  cabecera_funcion() declaracion_variables() {
-//   System.err.println(tabla_simbolos.toString());//TODO: quitar print
-  }bloque_sentencias() {tabla_simbolos.removeBlock(); }
+  cabecera_funcion() declaracion_variables() bloque_sentencias()
+    {tabla_simbolos.removeBlock();
+     if(tipo_funcion != null){
+        ErrorSemantico.deteccion("Las funciones tienen que terminar con un return",token)
+        tipo_funcion = null;
+     }
+    }
    }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -333,7 +338,8 @@ SymbolFunction simbolo_funcion;}
 {
   try {
   <tFUNCTION> tipo_func = tipo_variables() t = <tID>
-    {simbolo_funcion = new SymbolFunction(t.image, parametros_formales, tipo_func);
+    {tipo_funcion = tipo_func;
+    simbolo_funcion = new SymbolFunction(t.image, parametros_formales, tipo_func);
     tabla_simbolos.insertSymbol(simbolo_funcion);
     tabla_simbolos.insertBlock();
     }
@@ -349,9 +355,7 @@ SymbolFunction simbolo_funcion;}
 void declaracion_proc() :
 {}
 { try{
-  cabecera_proc() declaracion_variables() {
-//  System.err.println(tabla_simbolos.toString());//TODO: quitar print
-  }bloque_sentencias() {tabla_simbolos.removeBlock();}
+  cabecera_proc() declaracion_variables() bloque_sentencias() {tabla_simbolos.removeBlock();}
    }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -466,7 +470,7 @@ void lista_sentencias() :
 
 /*lista_sentencias ::= sentencia**/
 void sentencia() :
-{}
+{Attributes atr; Token t;}
 {
   try {
 	  leer() <tPC>
@@ -478,7 +482,16 @@ void sentencia() :
 	| declaracion_accion() <tPC>
 	| seleccion()
 	| mientras_que()
-	| <tRETURN> expresion() <tPC> //TODO: solo en funciones
+	| t=<tRETURN> atr = expresion() <tPC> {
+	    if(tipo_funcion != null){
+	        if(atr.type != tipo_funcion){
+	            ErrorSemantico.deteccion("El tipo obtenido no coincide con la declaracion de la funcion",t);
+	        }
+	        tipo_funcion = null;
+	    }else{
+	        ErrorSemantico.deteccion("La instruccion return solo se puede usar en funciones",t);
+	    }
+	}
 	}catch(ParseException e) {
 	  panic_mode(tPC);
 	  errorSintactico(e);
@@ -507,7 +520,7 @@ void lista_asignables() : //se puede sustituir por variable
 void lista_asignablesRec() : //se puede sustituir por variable
 {Token t;}//BUSCAR SIMBOLO Y PASAR ATR A ASIGNABLE
 { try{
-  (t=<tID> (asignable_vector())?)*
+  (<tCOMA> t=<tID> (asignable_vector())?)*
  }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -624,7 +637,6 @@ Attributes var_vector(Token t) :
         simbolo_del_factor = tabla_simbolos.getSymbol(t.image);
         //atr.asignar_simbolo(simbolo_del_factor); //para el caso epsilon
         atr = new Attributes(simbolo_del_factor);
-                //System.err.println("Atributo: "+ atr.toString());
     }catch(SymbolNotFoundException e){
         ErrorSemantico.deteccion(e, t);
     }
@@ -722,8 +734,7 @@ Attributes expresion() :
   (
     operador_relacional() atr_e2=expresion_simple()
   {
-//     System.err.println("Atributo 1:" + atr_e1.toString());
-//     System.err.println("Atributo 2:" + atr_e2.toString());
+
      atr_e1.comprobacion_mismo_tipo(atr_e2,token);
   })?
    }catch(ParseException e) {
