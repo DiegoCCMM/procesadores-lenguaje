@@ -283,7 +283,8 @@ Symbol.Types tipo_variables():
         return(Integer.parseInt(t.image));
    }
   }catch(ParseException e) {
-	errorSintactico(e);
+	  errorSintactico(e);
+	  return 0; //TODO: anyadido para no tener error en ejecucion del compilador, si no recibe entero devuelve null
  }
 }
 
@@ -315,8 +316,8 @@ void declaracion_funcion() :
 {
 	try {
   cabecera_funcion() declaracion_variables() {
-  //  System.err.println(tabla_simbolos.toString());
-  }bloque_sentencias() {tabla_simbolos.removeBlock();}
+//   System.err.println(tabla_simbolos.toString());//TODO: quitar print
+  }bloque_sentencias() {tabla_simbolos.removeBlock(); }
    }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -348,7 +349,7 @@ void declaracion_proc() :
 {}
 { try{
   cabecera_proc() declaracion_variables() {
-  //System.err.println(tabla_simbolos.toString());
+//  System.err.println(tabla_simbolos.toString());//TODO: quitar print
   }bloque_sentencias() {tabla_simbolos.removeBlock();}
    }catch(ParseException e) {
 	errorSintactico(e);
@@ -588,43 +589,49 @@ void lista_escribiblesRec() :
 
 /*asignacion ::= var_asignacion <tOPAS> expresion*/
 void asignacion() :
-{Attributes atr_v=null, atr_e=null;}
+{Attributes atr_v=null, atr_e=null; Token t;}
 { try{
-    //TODO FALTA EL SEMÁNTICO, HAY QUE COMPROBAR QUE EL ID DEL VAR ASIGNACIÓN EXISTE, SI EXISTE,
+    //TODO FALTA EL SEMANTICO, HAY QUE COMPROBAR QUE EL ID DEL VAR ASIGNACIÓN EXISTE, SI EXISTE,
     //todo se comprueba si el attributes tiene el mismo tipo, sino, errorsemantico
     //TODO SI EL IDENTIFICAR NO SE ENCUENTRA EN LA TABLA DE SIMBOLOS SE CREA UNDEFINED O SE CREA CON EL TIPO ESPERADO DEL ATRIBUTO
-  var_asignacion() <tOPAS> expresion()
+  atr_v=var_asignacion() t=<tOPAS> atr_e =expresion() { //Se utiliza el token de tOPAS para la info de los errores semanticos
+    atr_v.comprobacion_asignacion(atr_e,t);
+  }
  }catch(ParseException e) {
 	errorSintactico(e);
  }
 }
 
 /*var_asignacion ::= <tIDENTIFICADOR> var_Vector*/
-void var_asignacion() :
-{Token t;}
+Attributes var_asignacion() :
+{Token t;
+Attributes atr;}
 { try{
-  t=<tID> var_vector(t)
+  t=<tID> atr=var_vector(t) { return atr;}
  }catch(ParseException e) {
 	errorSintactico(e);
  }
 }
 
 /*var_vector ::= <tAV> expresion <tCV> | epsilon */
-void var_vector(Token t) :
+Attributes var_vector(Token t) :
 {
  Attributes atr=new Attributes();
  Symbol simbolo_del_factor = null;
     try{
         simbolo_del_factor = tabla_simbolos.getSymbol(t.image);
+        //atr.asignar_simbolo(simbolo_del_factor); //para el caso epsilon
+        atr = new Attributes(simbolo_del_factor);
+                //System.err.println("Atributo: "+ atr.toString());
     }catch(SymbolNotFoundException e){
         ErrorSemantico.deteccion(e, t);
     }
- }
+    }
 { try{
   <tAV> atr=expresion() <tCV>  //TODO REFACTORIZAR (ESTÁ HECHO EN FUNCION O VECTOR)
-  {atr.comprobaciones_para_vectores(simbolo_del_factor, t);}
+  {atr.comprobaciones_para_vectores(simbolo_del_factor, t); return atr;}
 |
-  {} /*epsilon*/
+  {return atr;} /*epsilon*/
  }catch(ParseException e) {
 	errorSintactico(e);
  }
