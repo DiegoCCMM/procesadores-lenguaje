@@ -178,20 +178,24 @@ public class Attributes implements Cloneable {
 
 
     public void comprobaciones_para_vectores(Symbol simbolo_del_factor, Token t){
-        if(this.comprobacion_tipo(Symbol.Types.INT,t)){   //el indice tiene que ser un entero
-            if(simbolo_del_factor != null && simbolo_del_factor instanceof SymbolArray) {   //el simbolo se tiene que poder transformar a un array
-                this.asignar_simbolo_array(simbolo_del_factor); //devolver el atributo del vector, no del indice
+        if(!(simbolo_del_factor instanceof SymbolArray)) {
+            ErrorSemantico.deteccion("Solo se pueden indexar vectores",t);
+        }else{
+            if(this.comprobacion_tipo(Symbol.Types.INT,t)){   //el indice tiene que ser un entero
+                if(simbolo_del_factor != null && simbolo_del_factor instanceof SymbolArray) {   //el simbolo se tiene que poder transformar a un array
+                    this.asignar_simbolo_array(simbolo_del_factor); //devolver el atributo del vector, no del indice
                 /*if (((SymbolArray) simbolo_del_factor).maxInd > this.valInt && ((SymbolArray) simbolo_del_factor).minInd <= this.valInt) {  //el indice tiene que estar entre el tamaño del vector
                     this.type = ((SymbolArray) simbolo_del_factor).baseType;
                 }else{
                     System.out.println("El indice tiene que ser menor que " + ((SymbolArray) simbolo_del_factor).maxInd + " y mayor o igual a "+((SymbolArray) simbolo_del_factor).minInd);
                     System.out.println("El indice recibido es " + this.valInt);
                 }*/
+                }
+            }else{
+                ErrorSemantico.deteccion("Para indexar un vector se necesita un valor entero",t);
             }
-        }else{
-             ErrorSemantico.deteccion("Para indexar un vector se necesita un valor entero",t);
-            //System.out.println("Para indexar un vector se necesita un valor entero");
         }
+
     }
 
     /*
@@ -266,4 +270,16 @@ public class Attributes implements Cloneable {
 
     }
 
+    public void comprobacion_asignable_leer(Token t){
+        if(this.parClass == Symbol.ParameterClass.VAL) ErrorSemantico.deteccion("No se puede leer un parametro por valor",t);
+        if(this.type == Symbol.Types.FUNCTION) ErrorSemantico.deteccion("No se puede leer una funcion",t);
+        if(this.type == Symbol.Types.PROCEDURE) ErrorSemantico.deteccion("No se puede leer un procedimiento",t);
+        //if(this.type == Symbol.Types.STRING) ErrorSemantico.deteccion("No se puede leer una cadena",t);
+    }
+
+    public void comprobacion_escribir(Token t){
+         if(this.type == Symbol.Types.ARRAY) ErrorSemantico.deteccion("No se pueden escribir vectores",t);
+         if(this.type == Symbol.Types.FUNCTION) ErrorSemantico.deteccion("No se pueden escribir funciones",t);
+        if(this.type == Symbol.Types.PROCEDURE) ErrorSemantico.deteccion("No se pueden escribir procedimientos",t);
+    }
 }

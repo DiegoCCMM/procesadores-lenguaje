@@ -243,7 +243,7 @@ Symbol.Types tipo_variables():
   	}
 	 }catch(ParseException e) {
 	errorSintactico(e);
-	return Symbol.Types.UNDEFINED; //TODO: modificado para no devolver null
+	return Symbol.Types.UNDEFINED;
  }
 }
  /*lista_vars := variable ( <tCOMA> variable )* */
@@ -314,13 +314,13 @@ void declaracion_accion() :
 
 /*declaracion_funcion ::= cabecera_funcion declaracion_variables bloque_sentencias*/
 void declaracion_funcion() :
-{Token token;}
+{} //token ya existe en adac, no hay que declararlo
 {
 	try {
   cabecera_funcion() declaracion_variables() bloque_sentencias()
     {tabla_simbolos.removeBlock();
      if(tipo_funcion != null){
-        ErrorSemantico.deteccion("Las funciones tienen que terminar con un return",token)
+        ErrorSemantico.deteccion("Las funciones tienen que terminar con un return",token);
         tipo_funcion = null;
      }
     }
@@ -509,34 +509,60 @@ void leer() :
 
 /*lista_asignables() := (< tID >) lista_asignablesRec */
 void lista_asignables() : //se puede sustituir por variable
-{}
+{Attributes atr = new Attributes(),atr_v=null; Symbol simbolo_del_factor = null; Token t;}
 { try{
-  <tID> (asignable_vector() )? lista_asignablesRec()
+  t= <tID>{
+     try{
+        simbolo_del_factor = tabla_simbolos.getSymbol(t.image);
+        atr = new Attributes(simbolo_del_factor);
+    }catch(SymbolNotFoundException e){
+        ErrorSemantico.deteccion(e, t);
+    }
+        atr.comprobacion_asignable_leer(t);
+  }
+   (atr_v=asignable_vector(simbolo_del_factor,t))?
+    { SemanticFunctions.comprobacion_no_asignacion_vector(atr_v,simbolo_del_factor,t); atr_v=null;}
+   lista_asignablesRec()
    }catch(ParseException e) {
 	errorSintactico(e);
  }
 }
 /*lista_asignablesRec ::= (asignable_vector)* */
 void lista_asignablesRec() : //se puede sustituir por variable
-{Token t;}//BUSCAR SIMBOLO Y PASAR ATR A ASIGNABLE
+{Token t; Attributes atr = new Attributes(), atr_v=null; Symbol simbolo_del_factor = null;}
 { try{
-  (<tCOMA> t=<tID> (asignable_vector())?)*
+  (<tCOMA> t=<tID>
+  {
+    try{
+        simbolo_del_factor = tabla_simbolos.getSymbol(t.image);
+        atr = new Attributes(simbolo_del_factor);
+    }catch(SymbolNotFoundException e){
+        ErrorSemantico.deteccion(e, t);
+    }
+    atr.comprobacion_asignable_leer(t);
+  }
+  (atr_v =asignable_vector(simbolo_del_factor,t))?
+    { SemanticFunctions.comprobacion_no_asignacion_vector(atr_v,simbolo_del_factor,t); atr_v=null;}
+  )*
  }catch(ParseException e) {
 	errorSintactico(e);
  }
 }
 /*asignable_vector ::= <tAV> expresion <tCV> */
-void asignable_vector() :
+Attributes asignable_vector(Symbol sim_v, Token t_v) :
 {
  Attributes atr=new Attributes();
 
  }
 { try{
-  <tAV> atr = expresion() <tCV> //TODO REFACTORIZAR (ESTÁ HECHO EN FUNCION O VECTOR)
-  {//SemFunc.comprobacion_tipo(atr_e1, Symbol.Types.INT);
-   }
+  <tAV> atr = expresion() <tCV>
+  {
+    atr.comprobaciones_para_vectores(sim_v,t_v);
+  }
  }catch(ParseException e) {
 	errorSintactico(e);
+ }finally{
+  return atr;
  }
 }
 
@@ -585,10 +611,13 @@ void cero_o_lista_escribibles() :
 
 /*lista_escribibles ::=   expresion | <tVALORCHAR> | <tVALORCADENA> */
 void lista_escribibles() : //1 o mÃ¡s escribibles
-{ }
+{ Attributes atr = new Attributes(); }
 
 { try{
-  (expresion()) lista_escribiblesRec()
+  (atr =expresion()){
+      atr.comprobacion_escribir(token);
+  } lista_escribiblesRec()
+
  }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -596,9 +625,9 @@ void lista_escribibles() : //1 o mÃ¡s escribibles
 
 /* lista_escribiblesRec ::= (<tCOMA> (expresion | <tVALORCHAR> | <tVALORCADENA> ) )* */
 void lista_escribiblesRec() :
-{}
+{ Attributes atr = new Attributes(); }
 { try{
-  (<tCOMA> expresion())*
+  (<tCOMA> atr = expresion(){atr.comprobacion_escribir(token);})*
    }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -622,7 +651,7 @@ Attributes var_asignacion() :
 {Token t;
 Attributes atr;}
 { try{
-  t=<tID> atr=var_vector(t) { return atr;}
+  t=<tID> atr=var_vector(token) { return atr;}
  }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -635,7 +664,6 @@ Attributes var_vector(Token t) :
  Symbol simbolo_del_factor = null;
     try{
         simbolo_del_factor = tabla_simbolos.getSymbol(t.image);
-        //atr.asignar_simbolo(simbolo_del_factor); //para el caso epsilon
         atr = new Attributes(simbolo_del_factor);
     }catch(SymbolNotFoundException e){
         ErrorSemantico.deteccion(e, t);

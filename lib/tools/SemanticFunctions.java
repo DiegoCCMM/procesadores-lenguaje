@@ -13,6 +13,7 @@ import lib.errores.ErrorSemantico;
 import lib.symbolTable.*;
 import lib.symbolTable.exceptions.AlreadyDefinedSymbolException;
 import traductor.*;
+import lib.attributes.*;
 
 import java.util.ArrayList;
 
@@ -99,6 +100,14 @@ public class SemanticFunctions {
                      (indice) + ", esperados " + simbolo_procedimiento.parList.size() + ")",t);
          }
     }
+        /*
+        No se puede asignar mediante get a un vector completo
+     */
+    public static void comprobacion_no_asignacion_vector(Attributes atr_v, Symbol sim_v, Token t){
+        if(((Symbol)sim_v).type == Symbol.Types.ARRAY && atr_v == null){
+             ErrorSemantico.deteccion("No se puede leer un vector",t);
+        }
+    }
 
     public static void comprobaciones_para_acciones_sin_parametros(Symbol accion, Token t){
         int dim=0;
@@ -111,4 +120,5 @@ public class SemanticFunctions {
             ErrorSemantico.deteccion("No se ha proporcionado ningún argumento (esperados "+ dim + ")",t);
         }
     }
+
 }
