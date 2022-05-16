@@ -1,7 +1,7 @@
  options {
    IGNORE_CASE = true;
    COMMON_TOKEN_ACTION = false;
-   DEBUG_PARSER = true;
+   DEBUG_PARSER = false;
 }
 
 PARSER_BEGIN(adac)
@@ -601,20 +601,28 @@ void asignacion() :
 
 /*var_asignacion ::= <tIDENTIFICADOR> var_Vector*/
 void var_asignacion() :
-{}
+{Token t;}
 { try{
-  <tID> var_vector()
+  t=<tID> var_vector(t)
  }catch(ParseException e) {
 	errorSintactico(e);
  }
 }
 
 /*var_vector ::= <tAV> expresion <tCV> | epsilon */
-void var_vector() :
-{}
+void var_vector(Token t) :
+{
+ Attributes atr=new Attributes();
+ Symbol simbolo_del_factor = null;
+    try{
+        simbolo_del_factor = tabla_simbolos.getSymbol(t.image);
+    }catch(SymbolNotFoundException e){
+        ErrorSemantico.deteccion(e, t);
+    }
+ }
 { try{
-  <tAV> expresion() <tCV>   //TODO comprobar que la expresion termina en un entero, ESTÁ HECHO EN FUNCION O VECTOR
-                           //TODO CUANDO TERMINES TODO, MIRA DE REFACTORIZAR ESTAS COSAS PARA QUE SEA MENOS LIO
+  <tAV> atr=expresion() <tCV>  //TODO REFACTORIZAR (ESTÁ HECHO EN FUNCION O VECTOR)
+  {atr.comprobaciones_para_vectores(simbolo_del_factor, t);}
 |
   {} /*epsilon*/
  }catch(ParseException e) {

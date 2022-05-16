@@ -139,7 +139,7 @@ public class Attributes implements Cloneable {
     /* Comprobracion del tipo de dato|variable|expresion */
     public boolean comprobacion_tipo(Symbol.Types tipo_esperado,Token t){
         if(this.type != tipo_esperado){
-            System.err.println("Atributo ("+ t.beginLine +"): "+ this.toString() );
+            System.err.println("Atributo ("+ t.beginLine+ ","+t.beginColumn +"): "+ this.toString() );
              ErrorSemantico.deteccion("INCOMPATIBILIDAD DE TIPOS: Se esperaba un dato de tipo "+ tipo_esperado,t);
             this.type=tipo_esperado;
             return(false);
@@ -164,6 +164,7 @@ public class Attributes implements Cloneable {
     public void comprobaciones_para_vectores(Symbol simbolo_del_factor, Token t){
         if(this.comprobacion_tipo(Symbol.Types.INT,t)){   //el indice tiene que ser un entero
             if(simbolo_del_factor != null && simbolo_del_factor instanceof SymbolArray) {   //el simbolo se tiene que poder transformar a un array
+                this.asignar_simbolo_array(simbolo_del_factor); //TODO: devolver el atributo del vector, no del indice
                 /*if (((SymbolArray) simbolo_del_factor).maxInd > this.valInt && ((SymbolArray) simbolo_del_factor).minInd <= this.valInt) {  //el indice tiene que estar entre el tamaño del vector
                     this.type = ((SymbolArray) simbolo_del_factor).baseType;
                 }else{
@@ -174,6 +175,16 @@ public class Attributes implements Cloneable {
         }else{
             System.out.println("Para indexar un vector se necesita un valor entero");
         }
+    }
+
+    /*
+        Cuando se realiza un acceso a una componente de un vector el atributo no es de tipo vector sino del tipo que
+        contiene el vector
+     */
+    public void asignar_simbolo_array(Symbol simbolo_del_factor){ //TODO: revisar construccion del nuevo atributo
+        type = ((SymbolArray) simbolo_del_factor).baseType;
+        tamanyo_vector=0;
+        referencia_simbolo=simbolo_del_factor;
     }
 
     public void asignar_simbolo(Symbol simbolo_del_factor){
