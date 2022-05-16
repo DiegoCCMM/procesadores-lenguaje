@@ -242,6 +242,7 @@ Symbol.Types tipo_variables():
   	}
 	 }catch(ParseException e) {
 	errorSintactico(e);
+	return Symbol.Types.UNDEFINED; //TODO: modificado para no devolver null
  }
 }
  /*lista_vars := variable ( <tCOMA> variable )* */
@@ -504,18 +505,21 @@ void lista_asignables() : //se puede sustituir por variable
 }
 /*lista_asignablesRec ::= (asignable_vector)* */
 void lista_asignablesRec() : //se puede sustituir por variable
-{}
+{Token t;}//BUSCAR SIMBOLO Y PASAR ATR A ASIGNABLE
 { try{
-  (<tID> (asignable_vector())?)*
+  (t=<tID> (asignable_vector())?)*
  }catch(ParseException e) {
 	errorSintactico(e);
  }
 }
 /*asignable_vector ::= <tAV> expresion <tCV> */
 void asignable_vector() :
-{Attributes atr_e1 = null;}
+{
+ Attributes atr=new Attributes();
+
+ }
 { try{
-  <tAV> atr_e1 = expresion() <tCV>
+  <tAV> atr = expresion() <tCV> //TODO REFACTORIZAR (ESTÁ HECHO EN FUNCION O VECTOR)
   {//SemFunc.comprobacion_tipo(atr_e1, Symbol.Types.INT);
    }
  }catch(ParseException e) {
@@ -591,8 +595,6 @@ void lista_escribiblesRec() :
 void asignacion() :
 {Attributes atr_v=null, atr_e=null; Token t;}
 { try{
-    //TODO FALTA EL SEMANTICO, HAY QUE COMPROBAR QUE EL ID DEL VAR ASIGNACIÓN EXISTE, SI EXISTE,
-    //todo se comprueba si el attributes tiene el mismo tipo, sino, errorsemantico
     //TODO SI EL IDENTIFICAR NO SE ENCUENTRA EN LA TABLA DE SIMBOLOS SE CREA UNDEFINED O SE CREA CON EL TIPO ESPERADO DEL ATRIBUTO
   atr_v=var_asignacion() t=<tOPAS> atr_e =expresion() { //Se utiliza el token de tOPAS para la info de los errores semanticos
     atr_v.comprobacion_asignacion(atr_e,t);
@@ -629,7 +631,11 @@ Attributes var_vector(Token t) :
     }
 { try{
   <tAV> atr=expresion() <tCV>  //TODO REFACTORIZAR (ESTÁ HECHO EN FUNCION O VECTOR)
-  {atr.comprobaciones_para_vectores(simbolo_del_factor, t); return atr;}
+  { if (atr !=null)  {
+      atr.comprobaciones_para_vectores(simbolo_del_factor, t);
+    return atr;}
+    else return new Attributes();
+    }
 |
   {return atr;} /*epsilon*/
  }catch(ParseException e) {

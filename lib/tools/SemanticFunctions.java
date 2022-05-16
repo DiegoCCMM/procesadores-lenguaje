@@ -35,8 +35,9 @@ public class SemanticFunctions {
         Symbol simbolo_a_insertar = null;
         if (tamanyo_vector != null && tamanyo_vector > 0) {
             simbolo_a_insertar = new SymbolArray(nombre_simbolo, 0, tamanyo_vector - 1, tipo_simbolo);
-        } else if (tamanyo_vector != null && tamanyo_vector < 0) {
+        } else if (tamanyo_vector != null && tamanyo_vector <= 0) {
             ErrorSemantico.deteccion("el tamaño del vector tiene que ser mayor que 0", token_simbolo);
+            simbolo_a_insertar =  new SymbolArray(nombre_simbolo, 0, 0, tipo_simbolo);
 
         } else if (tipo_simbolo == Symbol.Types.CHAR) {
             simbolo_a_insertar = new SymbolChar(nombre_simbolo);

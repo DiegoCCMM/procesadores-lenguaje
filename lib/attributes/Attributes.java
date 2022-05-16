@@ -180,7 +180,7 @@ public class Attributes implements Cloneable {
     public void comprobaciones_para_vectores(Symbol simbolo_del_factor, Token t){
         if(this.comprobacion_tipo(Symbol.Types.INT,t)){   //el indice tiene que ser un entero
             if(simbolo_del_factor != null && simbolo_del_factor instanceof SymbolArray) {   //el simbolo se tiene que poder transformar a un array
-                this.asignar_simbolo_array(simbolo_del_factor); //TODO: devolver el atributo del vector, no del indice
+                this.asignar_simbolo_array(simbolo_del_factor); //devolver el atributo del vector, no del indice
                 /*if (((SymbolArray) simbolo_del_factor).maxInd > this.valInt && ((SymbolArray) simbolo_del_factor).minInd <= this.valInt) {  //el indice tiene que estar entre el tamaño del vector
                     this.type = ((SymbolArray) simbolo_del_factor).baseType;
                 }else{
@@ -198,7 +198,7 @@ public class Attributes implements Cloneable {
         Cuando se realiza un acceso a una componente de un vector el atributo no es de tipo vector sino del tipo que
         contiene el vector
      */
-    public void asignar_simbolo_array(Symbol simbolo_del_factor){ //TODO: revisar construccion del nuevo atributo
+    public void asignar_simbolo_array(Symbol simbolo_del_factor){
         type = ((SymbolArray) simbolo_del_factor).baseType;
         parClass = ((Symbol) simbolo_del_factor).parClass;
         tamanyo_vector=0;
