@@ -162,15 +162,13 @@ public class Attributes implements Cloneable {
     /* Comprobacion del tipo y si es asignable (this es el atributo de la izda de la asignacion) */
     public void comprobacion_asignacion(Attributes sim,Token t){
         //System.err.println("Atributo asignacion: "+ this.toString());
-        if(this.parClass == Symbol.ParameterClass.VAL){
-            ErrorSemantico.deteccion("No se pueden asignar parámetros por valor",t);
-        }else {
-            if(this.type == Symbol.Types.ARRAY){
-                ErrorSemantico.deteccion("No se puede asignar a vectores",t);
-            }else if(this.type != sim.type){
-                ErrorSemantico.deteccion("No se pueden asignar tipos distintos",t);
-            }
+
+        if(this.type == Symbol.Types.ARRAY){
+            ErrorSemantico.deteccion("No se puede asignar a vectores",t);
+        }else if(this.type != sim.type){
+            ErrorSemantico.deteccion("No se pueden asignar tipos distintos",t);
         }
+
         if(referencia_simbolo != null){
             referencia_simbolo = null;
         }
@@ -271,7 +269,7 @@ public class Attributes implements Cloneable {
     }
 
     public void comprobacion_asignable_leer(Token t){
-        if(this.parClass == Symbol.ParameterClass.VAL) ErrorSemantico.deteccion("No se puede leer un parametro por valor",t);
+        //if(this.parClass == Symbol.ParameterClass.VAL) ErrorSemantico.deteccion("No se puede leer un parametro por valor",t);
         if(this.type == Symbol.Types.FUNCTION) ErrorSemantico.deteccion("No se puede leer una funcion",t);
         if(this.type == Symbol.Types.PROCEDURE) ErrorSemantico.deteccion("No se puede leer un procedimiento",t);
         //if(this.type == Symbol.Types.STRING) ErrorSemantico.deteccion("No se puede leer una cadena",t);
