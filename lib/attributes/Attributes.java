@@ -240,12 +240,12 @@ public class Attributes implements Cloneable {
                 //utilizar simbolo_funcion
                 esperados= simbolo_funcion.parList.size();
                 Symbol simbolo = simbolo_funcion.parList.get(indice);
-                comprobaciones_parametros(simbolo);
+                comprobaciones_parametros(simbolo,t);
             } else {
                 //utilizar simbolo_procedimiento
                 esperados= simbolo_procedimiento.parList.size();
                 Symbol simbolo = simbolo_procedimiento.parList.get(indice);
-                comprobaciones_parametros(simbolo);
+                comprobaciones_parametros(simbolo,t);
             }
         }catch (IndexOutOfBoundsException e){
             ErrorSemantico.deteccion("Se han proporcionado demasiados argumentos (recibidos "+
@@ -253,11 +253,11 @@ public class Attributes implements Cloneable {
         }
     }
 
-    private void comprobaciones_parametros(Symbol simbolo) {
+    private void comprobaciones_parametros(Symbol simbolo, Token t) {
         if (this.type != simbolo.type) {
-            System.out.println("El parametro con el que se esta invocando a la funcion es erroneo");
+            ErrorSemantico.deteccion("El parametro con el que se esta invocando a la funcion es erroneo",t);
         }else if(simbolo.parClass == Symbol.ParameterClass.REF && this.referencia_simbolo == null){
-            System.out.println("Se esperaba una variable, se ha obtenido una constante");
+             ErrorSemantico.deteccion("Se esperaba una variable, se ha obtenido una constante",t);
         }
     }
 

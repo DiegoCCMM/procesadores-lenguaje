@@ -104,7 +104,7 @@ public class SemanticFunctions {
         No se puede asignar mediante get a un vector completo
      */
     public static void comprobacion_no_asignacion_vector(Attributes atr_v, Symbol sim_v, Token t){
-        if(((Symbol)sim_v).type == Symbol.Types.ARRAY && atr_v == null){
+        if(sim_v != null && ((Symbol)sim_v).type == Symbol.Types.ARRAY && atr_v == null){
              ErrorSemantico.deteccion("No se puede leer un vector",t);
         }
     }
