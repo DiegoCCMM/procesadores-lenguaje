@@ -21,6 +21,7 @@ public class adac {
    static SemanticFunctions SemFunc = new SemanticFunctions();
    static ErrorSemantico ErrorSemantico = new ErrorSemantico();
    static Symbol.Types tipo_funcion = null;
+   static boolean hay_return = false;
 
     public static void main(String [] args)
   {
@@ -319,10 +320,11 @@ void declaracion_funcion() :
 	try {
   cabecera_funcion() declaracion_variables() bloque_sentencias()
     {tabla_simbolos.removeBlock();
-     if(tipo_funcion != null){
+     if(!hay_return){
         ErrorSemantico.deteccion("Las funciones tienen que terminar con un return",token);
-        tipo_funcion = null;
      }
+     tipo_funcion = null;
+     hay_return = false;
     }
    }catch(ParseException e) {
 	errorSintactico(e);
@@ -339,6 +341,7 @@ SymbolFunction simbolo_funcion;}
   try {
   <tFUNCTION> tipo_func = tipo_variables() t = <tID>
     {tipo_funcion = tipo_func;
+
     simbolo_funcion = new SymbolFunction(t.image, parametros_formales, tipo_func);
     tabla_simbolos.insertSymbol(simbolo_funcion);
     tabla_simbolos.insertBlock();
@@ -487,7 +490,7 @@ void sentencia() :
 	        if(atr.type != tipo_funcion){
 	            ErrorSemantico.deteccion("El tipo obtenido no coincide con la declaracion de la funcion",t);
 	        }
-	        tipo_funcion = null;
+	        hay_return = true;
 	    }else{
 	        ErrorSemantico.deteccion("La instruccion return solo se puede usar en funciones",t);
 	    }
