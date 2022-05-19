@@ -22,6 +22,7 @@ public class adac {
    static ErrorSemantico ErrorSemantico = new ErrorSemantico();
    static Symbol.Types tipo_funcion = null;
    static boolean hay_return = false;
+   static boolean errores_sintactico= false;
 
     public static void main(String [] args)
   {
@@ -49,6 +50,9 @@ public class adac {
 		//errorSintactico(e);
    }
   //System.out.println(tabla_simbolos.toString());
+  if(errores_sintactico || ErrorSemantico. getContadorErrores() != 0)
+   System.out.println("ERROR");
+  else
    System.out.println("FIN");
   }
 
@@ -60,6 +64,7 @@ public class adac {
 
 
   static void errorSintactico(ParseException e){
+        errores_sintactico=true;
     String msg ="ERROR SINTACTICO (" + e.currentToken.next.beginLine + ", " + e.currentToken.next.beginColumn
      + "): encontrado: <" + e.currentToken.next.image + "> Se esperaba:  ";
      for(int i=0; i< e.expectedTokenSequences.length; i++) {

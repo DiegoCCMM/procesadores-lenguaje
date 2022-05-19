@@ -139,7 +139,7 @@ public class Attributes implements Cloneable {
     /* Comprobracion del tipo de dato|variable|expresion */
     public boolean comprobacion_tipo(Symbol.Types tipo_esperado,Token t){
         if(this.type != tipo_esperado){
-            System.err.println("Atributo ("+ t.beginLine+ ","+t.beginColumn +"): "+ this.toString() ); //TODO: quitar
+//            System.err.println("Atributo ("+ t.beginLine+ ","+t.beginColumn +"): "+ this.toString() ); //TODO: quitar
              ErrorSemantico.deteccion("INCOMPATIBILIDAD DE TIPOS: Se esperaba un dato de tipo "+ tipo_esperado,t);
             this.type=tipo_esperado;
             return(false);
