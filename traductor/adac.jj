@@ -13,6 +13,7 @@ import lib.attributes.Attributes;
 import lib.symbolTable.exceptions.*;
 import lib.errores.*;
 import lib.tools.*;
+import lib.tools.codeGeneration.*;
 import java.util.*;
 
 public class adac {
@@ -23,6 +24,7 @@ public class adac {
    static Symbol.Types tipo_funcion = null;
    static boolean hay_return = false;
    static boolean errores_sintactico= false;
+   static CodeBlock CodeBlock = new CodeBlock();
 
     public static void main(String [] args)
   {
@@ -203,7 +205,7 @@ TOKEN : /*Separadores*/
 void programa():
 { }
 {
-  <tPROCEDURE> <tID> <tIS> {tabla_simbolos.insertBlock();} declaracion_variables() declaracion_acciones()  bloque_sentencias() <EOF>
+  <tPROCEDURE> <tID> <tIS> declaracion_variables() declaracion_acciones()  bloque_sentencias() <EOF>
 }
 
 /***DECLARACION DE VARIABLES***/
@@ -624,6 +626,7 @@ void lista_escribibles() : //1 o mÃ¡s escribibles
 { try{
   (atr =expresion()){
       atr.comprobacion_escribir(token);
+
   } lista_escribiblesRec()
 
  }catch(ParseException e) {

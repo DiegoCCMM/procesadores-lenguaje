@@ -29,10 +29,12 @@ public class SymbolTable {
     private Set<String> reservedWords;
 
     public int level; //nivel actual
+    public ArrayList <Integer> direcciones_de_los_bloques;
 
     public SymbolTable() {
         st = new ArrayList<HashMap<String, Symbol>>(ST_SIZE);
         level = -1; //aún no hay ningún bloque intoducido
+        direcciones_de_los_bloques = new ArrayList<>();
         insertBlock();
         reservedWords = new HashSet<String> ();
     }
@@ -40,6 +42,7 @@ public class SymbolTable {
     public SymbolTable(String[] pals) {
     	st = new ArrayList<HashMap<String, Symbol>>(ST_SIZE);
         level = -1; //aún no hay ningún bloque introducido
+        direcciones_de_los_bloques = new ArrayList<>();
         insertBlock();
         reservedWords = new HashSet<String>(Arrays.asList(pals));
     }
@@ -48,12 +51,14 @@ public class SymbolTable {
     public void insertBlock() {
         st.add(new HashMap<String, Symbol>(HASH_SIZE));
         level++;
+        direcciones_de_los_bloques.add(3);
     }
 
     //elimina un bloque
     public void removeBlock() {
         st.remove(st.size()-1);
         level--;
+        direcciones_de_los_bloques.remove(direcciones_de_los_bloques.size() - 1);
     }
 
     //inserta las palabras reservadas, sustituyendo el anterior contenido
@@ -77,7 +82,20 @@ public class SymbolTable {
             throw new AlreadyDefinedSymbolException(s.name);
         } else {
             s.nivel = level;
+            s.dir = direcciones_de_los_bloques.get(direcciones_de_los_bloques.size() - 1);
+            direcciones_de_los_bloques.set(direcciones_de_los_bloques.size() - 1,
+                    direcciones_de_los_bloques.get(direcciones_de_los_bloques.size()-1)
+                            + el_tamanyo_del_simbolo(s));
             currentBlock.put(s.name, s);
+        }
+    }
+
+    private Integer el_tamanyo_del_simbolo(Symbol s) {
+        if(s instanceof SymbolArray)
+        {
+            return ((SymbolArray) s).maxInd;
+        }else{
+            return 1;
         }
     }
 

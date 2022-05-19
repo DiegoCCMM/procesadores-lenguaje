@@ -182,12 +182,6 @@ public class Attributes implements Cloneable {
             if(this.comprobacion_tipo(Symbol.Types.INT,t)){   //el indice tiene que ser un entero
                 if(simbolo_del_factor != null && simbolo_del_factor instanceof SymbolArray) {   //el simbolo se tiene que poder transformar a un array
                     this.asignar_simbolo_array(simbolo_del_factor); //devolver el atributo del vector, no del indice
-                /*if (((SymbolArray) simbolo_del_factor).maxInd > this.valInt && ((SymbolArray) simbolo_del_factor).minInd <= this.valInt) {  //el indice tiene que estar entre el tamaño del vector
-                    this.type = ((SymbolArray) simbolo_del_factor).baseType;
-                }else{
-                    System.out.println("El indice tiene que ser menor que " + ((SymbolArray) simbolo_del_factor).maxInd + " y mayor o igual a "+((SymbolArray) simbolo_del_factor).minInd);
-                    System.out.println("El indice recibido es " + this.valInt);
-                }*/
                 }
             }else{
                 ErrorSemantico.deteccion("Para indexar un vector se necesita un valor entero",t);
