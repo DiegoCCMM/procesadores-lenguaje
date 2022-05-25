@@ -69,17 +69,33 @@ public class Generator {
 
         }else{  //es una variable, se extrae de memoria en memoria
             apila_valor_simbolo(atr.referencia_simbolo);
-    }
-        put_line();
+            if (atr.type == Symbol.Types.INT || atr.type == Symbol.Types.BOOL) { //escribir una variable bool o int, se escribe como números
+                codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 1);
+            }else if (atr.type == Symbol.Types.CHAR) { //escribir una variable char
+                codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 0);
+            }
+        }
 
 }
 
-    private void put_line() {
+    public void put_line() {
         codigo_maquina.addComment("Put_line");
         codigo_maquina.addInst(PCodeInstruction.OpCode.STC, 13);
         codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 0);
         codigo_maquina.addInst(PCodeInstruction.OpCode.STC, 10);
         codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 0);
+    }
+
+    public void lista_asignables(Attributes atr){
+        codigo_maquina.addComment("Leer valor");
+        if(atr.type != Symbol.Types.ARRAY && atr.referencia_simbolo != null ){
+            apila_direccion_simbolo(atr.referencia_simbolo);
+            if(atr.type == Symbol.Types.INT){
+                codigo_maquina.addInst(PCodeInstruction.OpCode.RD,1);
+            }else if(atr.type == Symbol.Types.CHAR){
+                codigo_maquina.addInst(PCodeInstruction.OpCode.RD,0);
+            }
+        }
     }
 
     public String toString() {

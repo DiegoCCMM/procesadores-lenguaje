@@ -538,6 +538,7 @@ void lista_asignables() : //se puede sustituir por variable
         ErrorSemantico.deteccion(e, t);
     }
         atr.comprobacion_asignable_leer(t);
+        generador_codigo.lista_asignables(atr);
   }
    (atr_v=asignable_vector(simbolo_del_factor,t))?
     { SemanticFunctions.comprobacion_no_asignacion_vector(atr_v,simbolo_del_factor,t); atr_v=null;}
@@ -559,6 +560,7 @@ void lista_asignablesRec() : //se puede sustituir por variable
         ErrorSemantico.deteccion(e, t);
     }
     atr.comprobacion_asignable_leer(t);
+    generador_codigo.lista_asignables(atr);
   }
   (atr_v =asignable_vector(simbolo_del_factor,t))?
     { SemanticFunctions.comprobacion_no_asignacion_vector(atr_v,simbolo_del_factor,t); atr_v=null;}
@@ -610,6 +612,7 @@ void escribir_linea() :
 {}
 { try{
   <tPUT_L> <tAP> cero_o_lista_escribibles() <tCP>
+  { generador_codigo.put_line();}
   /* Se podria sustituir cero_o_lista_escribibles por (lista_escribibles())* */
  }catch(ParseException e) {
 	errorSintactico(e);
@@ -662,7 +665,7 @@ void asignacion() :
 { try{
     //TODO SI EL IDENTIFICAR NO SE ENCUENTRA EN LA TABLA DE SIMBOLOS SE CREA UNDEFINED O SE CREA CON EL TIPO ESPERADO DEL ATRIBUTO
   atr_v=var_asignacion() t=<tOPAS> atr_e =expresion() { //Se utiliza el token de tOPAS para la info de los errores semanticos
-    if(atr_v.referencia_simbolo != null) System.out.println(atr_v.referencia_simbolo.toString());
+    //if(atr_v.referencia_simbolo != null) System.out.println(atr_v.referencia_simbolo.toString());
     atr_v.comprobacion_asignacion(atr_e,t);
   }
  }catch(ParseException e) {
