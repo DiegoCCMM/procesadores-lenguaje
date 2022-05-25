@@ -27,7 +27,7 @@ public class SymbolFunction extends Symbol implements Cloneable {
     }
 
     public String toString() {
-        return "(" + name + "," + type + "," + parList + "," + returnType + "," + parClass + "," + nivel + ")";
+        return "(" + name + "," + type + "," + parList + "," + returnType + "," + parClass + "," + nivel +","+ dir + ")";
     }
     
     public SymbolFunction clone () {

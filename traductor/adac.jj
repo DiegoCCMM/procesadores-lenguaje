@@ -303,7 +303,7 @@ Symbol.Types tipo_variables():
    }
   }catch(ParseException e) {
 	  errorSintactico(e);
-	  return 0; //TODO: anyadido para no tener error en ejecucion del compilador, si no recibe entero devuelve null
+	  return 0;
  }
 }
 
@@ -662,6 +662,7 @@ void asignacion() :
 { try{
     //TODO SI EL IDENTIFICAR NO SE ENCUENTRA EN LA TABLA DE SIMBOLOS SE CREA UNDEFINED O SE CREA CON EL TIPO ESPERADO DEL ATRIBUTO
   atr_v=var_asignacion() t=<tOPAS> atr_e =expresion() { //Se utiliza el token de tOPAS para la info de los errores semanticos
+    if(atr_v.referencia_simbolo != null) System.out.println(atr_v.referencia_simbolo.toString());
     atr_v.comprobacion_asignacion(atr_e,t);
   }
  }catch(ParseException e) {

@@ -95,7 +95,7 @@ public class SymbolTable {
     private Integer el_tamanyo_del_simbolo(Symbol s) {
         if(s instanceof SymbolArray)
         {
-            return ((SymbolArray) s).maxInd;
+            return ((SymbolArray) s).maxInd + 1;
         }else{
             return 1;
         }
