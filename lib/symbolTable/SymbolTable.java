@@ -81,11 +81,13 @@ public class SymbolTable {
         if (currentBlock.containsKey(s.name)) { // ya está
             throw new AlreadyDefinedSymbolException(s.name);
         } else {
+            int nivel_actual = direcciones_de_los_bloques.size() - 1;
+            int direccion_post_reserva_del_simbolo =
+                    direcciones_de_los_bloques.get(nivel_actual) + el_tamanyo_del_simbolo(s);
+
             s.nivel = level;
-            s.dir = direcciones_de_los_bloques.get(direcciones_de_los_bloques.size() - 1);
-            direcciones_de_los_bloques.set(direcciones_de_los_bloques.size() - 1,
-                    direcciones_de_los_bloques.get(direcciones_de_los_bloques.size()-1)
-                            + el_tamanyo_del_simbolo(s));
+            s.dir = direcciones_de_los_bloques.get(nivel_actual);
+            direcciones_de_los_bloques.set(nivel_actual, direccion_post_reserva_del_simbolo);
             currentBlock.put(s.name, s);
         }
     }

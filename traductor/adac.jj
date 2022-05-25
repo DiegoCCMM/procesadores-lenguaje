@@ -15,6 +15,7 @@ import lib.errores.*;
 import lib.tools.*;
 import lib.tools.codeGeneration.*;
 import java.util.*;
+import java.io.IOException;
 
 public class adac {
 
@@ -24,7 +25,7 @@ public class adac {
    static Symbol.Types tipo_funcion = null;
    static boolean hay_return = false;
    static boolean errores_sintactico= false;
-   static CodeBlock CodeBlock = new CodeBlock();
+   static Generator generador_codigo = new Generator(tabla_simbolos);
 
     public static void main(String [] args)
   {
@@ -54,8 +55,14 @@ public class adac {
   //System.out.println(tabla_simbolos.toString());
   if(errores_sintactico || ErrorSemantico. getContadorErrores() != 0)
    System.out.println("ERROR");
-  else
-   System.out.println("FIN");
+  else{
+      try{
+        generador_codigo.fin();
+      }catch(IOException e){
+          System.out.println("Ha habido un problema creando el fichero "+ e);
+      }
+      System.out.println("FIN");
+   }
   }
 
   static void errorLexico(Token t) {
@@ -205,7 +212,9 @@ TOKEN : /*Separadores*/
 void programa():
 { }
 {
-  <tPROCEDURE> <tID> <tIS> declaracion_variables() declaracion_acciones()  bloque_sentencias() <EOF>
+  <tPROCEDURE> <tID> <tIS> {generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.ENP, "L0");}
+  declaracion_variables() declaracion_acciones() {generador_codigo.codigo_maquina.addLabel("L0");}
+  bloque_sentencias() <EOF> {generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.LVP);}
 }
 
 /***DECLARACION DE VARIABLES***/
@@ -626,7 +635,7 @@ void lista_escribibles() : //1 o mÃ¡s escribibles
 { try{
   (atr =expresion()){
       atr.comprobacion_escribir(token);
-
+      generador_codigo.lista_escribibles(atr);
   } lista_escribiblesRec()
 
  }catch(ParseException e) {
@@ -638,7 +647,10 @@ void lista_escribibles() : //1 o mÃ¡s escribibles
 void lista_escribiblesRec() :
 { Attributes atr = new Attributes(); }
 { try{
-  (<tCOMA> atr = expresion(){atr.comprobacion_escribir(token);})*
+  (<tCOMA> atr = expresion(){
+    atr.comprobacion_escribir(token);
+    generador_codigo.lista_escribibles(atr);
+  } )*
    }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -911,7 +923,10 @@ Attributes funcion_o_vector(Token t) :
     atr = new Attributes(); atr.returnType_al_tipo(simbolo_del_factor);
   } |
   <tAV> atr = expresion() <tCV>
-  {atr.comprobaciones_para_vectores(simbolo_del_factor, t);} | {atr.asignar_simbolo(simbolo_del_factor);} /*epsilon*/
+  {
+    atr.comprobaciones_para_vectores(simbolo_del_factor, t);
+    //generador_codigo.()
+  } | {atr.asignar_simbolo(simbolo_del_factor);} /*epsilon*/
  }catch(ParseException e) {
 	errorSintactico(e);
  }finally{

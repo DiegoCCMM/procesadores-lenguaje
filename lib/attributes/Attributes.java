@@ -61,12 +61,20 @@ public class Attributes implements Cloneable {
     public Attributes(boolean value){
         type = Symbol.Types.BOOL;
         valBool = value;
+        if(value)
+            valInt = 1;
+        else
+            valInt = 0;
         parClass = Symbol.ParameterClass.NONE;
     }
     //Atributo bool parametro
     public Attributes(boolean value, Symbol.ParameterClass parameter){
         type = Symbol.Types.BOOL;
         valBool = value;
+        if(value)
+            valInt = 1;
+        else
+            valInt = 0;
         parClass = parameter;
     }
 
@@ -197,11 +205,10 @@ public class Attributes implements Cloneable {
     public void asignar_simbolo_array(Symbol simbolo_del_factor){
         type = ((SymbolArray) simbolo_del_factor).baseType;
         parClass = ((Symbol) simbolo_del_factor).parClass;
-        tamanyo_vector=0;
+        tamanyo_vector=((SymbolArray)simbolo_del_factor).maxInd;
         referencia_simbolo=simbolo_del_factor;
     }
 
-    //TODO: ojo, no asigna parClass!
     public void asignar_simbolo(Symbol simbolo_del_factor){
         this.type = simbolo_del_factor.type;
         Symbol auxiliar_parseo = simbolo_del_factor;
@@ -223,7 +230,8 @@ public class Attributes implements Cloneable {
         }else if(simbolo_del_factor.type == Symbol.Types.UNDEFINED){
             System.out.println("El atributo pasa a ser un no definido"); //TODO WARNING
         }
-        referencia_simbolo=simbolo_del_factor;
+        referencia_simbolo = simbolo_del_factor;
+        parClass = simbolo_del_factor.parClass;
     }
 
     public void es_parametro_de_accion(SymbolFunction simbolo_funcion, SymbolProcedure simbolo_procedimiento,
