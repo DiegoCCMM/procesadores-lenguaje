@@ -663,7 +663,7 @@ void lista_escribiblesRec() :
 void asignacion() :
 {Attributes atr_v=null, atr_e=null; Token t;}
 { try{
-    //TODO SI EL IDENTIFICAR NO SE ENCUENTRA EN LA TABLA DE SIMBOLOS SE CREA UNDEFINED O SE CREA CON EL TIPO ESPERADO DEL ATRIBUTO
+    //TODO SI EL ID de var asignacion NO SE ENCUENTRA EN LA TABLA DE SIMBOLOS SE CREA UNDEFINED O SE CREA CON EL TIPO ESPERADO DEL ATRIBUTO
   atr_v=var_asignacion() t=<tOPAS> atr_e =expresion() { //Se utiliza el token de tOPAS para la info de los errores semanticos
     //if(atr_v.referencia_simbolo != null) System.out.println(atr_v.referencia_simbolo.toString());
     atr_v.comprobacion_asignacion(atr_e,t);
@@ -697,7 +697,7 @@ Attributes var_vector(Token t) :
     }
     }
 { try{
-  <tAV> atr=expresion() <tCV>  //TODO REFACTORIZAR (ESTÁ HECHO EN FUNCION O VECTOR)
+  <tAV> atr=expresion() <tCV>
   { if (atr !=null)  {
       atr.comprobaciones_para_vectores(simbolo_del_factor, t);
     return atr;}
@@ -783,14 +783,14 @@ void mientras_que() :
 
 /*expresion := expresion_simple() (operador_relacional() expresion_simple())?*/
 Attributes expresion() :
-{Attributes atr_e1=null,atr_e2=null;}
+{Attributes atr_e1=null,atr_e2=null; PCodeInstruction.OpCode operador;}
 { try{
   atr_e1=expresion_simple()
   (
-    operador_relacional() atr_e2=expresion_simple()
+    operador = operador_relacional() atr_e2=expresion_simple()
   {
-
      atr_e1.comprobacion_mismo_tipo(atr_e2,token);
+     generador_codigo.escribo_operador(operador);
   })?
    }catch(ParseException e) {
 	errorSintactico(e);
@@ -799,18 +799,17 @@ Attributes expresion() :
 }
 
 /*operador_relacional : <tIGUAL> | <tMENOR> | <tMAYOR> | <tMEI> | <tMAI> | <tNI> */
-void operador_relacional() :
+PCodeInstruction.OpCode operador_relacional() :
 {}
 {
-//TODO PARA ADELANTAR A LA GENERACIÓN DE CÓDIGO, NECESITAREMOS PASAR EL TIPO DE OPERACION PARA ARRIBA, PUES SE ESCRIBE
-//todo parametro1 parametro2 operacion
+
 try{
-  <tIGUAL>
-| <tMENOR>
-| <tMAYOR>
-| <tMEI>
-| <tMAI>
-| <tNI>
+  <tIGUAL> { return PCodeInstruction.OpCode.EQ;}
+| <tMENOR> { return PCodeInstruction.OpCode.LT;}
+| <tMAYOR> { return PCodeInstruction.OpCode.GT;}
+| <tMEI> { return PCodeInstruction.OpCode.LTE;}
+| <tMAI> { return PCodeInstruction.OpCode.GTE;}
+| <tNI> { return PCodeInstruction.OpCode.NEQ;}
  }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -896,6 +895,7 @@ Attributes factor() :
             atr_f = new Attributes(0);
         }
     }
+    //TODO ESTAS SON LAS HOJAS MÁS IMPORTANTES ESCRIBIR EN EL CODIGO GENERADO LO NECESARIO
 | t=<tID> atr_f = funcion_o_vector(t) /*llamada a funcion o componente de vector*/
 | t= <tVALORENTERO> { atr_f = new Attributes(Integer.parseInt(t.image));}
 | t= <tVALORCHAR>  { atr_f =new Attributes(t.image.charAt(0));}
@@ -920,17 +920,17 @@ Attributes funcion_o_vector(Token t) :
     }
 }
 {
-  try{
+  try{  //TODO CASO DE FUNCION, NO NOS METERMOS AUN CON LO QUE SE ESCRIBE EN EL CODIGO
   <tAP> {atr=null;}(atr= lista_uno_o_mas_exps(simbolo_del_factor, t) )? <tCP> {
     if(atr==null)
         SemanticFunctions.comprobaciones_para_acciones_sin_parametros(simbolo_del_factor,t);
     atr = new Attributes(); atr.returnType_al_tipo(simbolo_del_factor);
-  } |
+  } |   //TODO CASO VECTOR, ES RECURSIVO, LO ESCRIBIRA LA NUEVA LLAMADA A EXPRESION
   <tAV> atr = expresion() <tCV>
   {
     atr.comprobaciones_para_vectores(simbolo_del_factor, t);
     //generador_codigo.()
-  } | {atr.asignar_simbolo(simbolo_del_factor);} /*epsilon*/
+  } | {atr.asignar_simbolo(simbolo_del_factor);} /*epsilon*/ //TODO CASO IDENTIFICADOR, ASI COMO SE ASIGNA EL SIMBOLO AL ATR, VAMOS A ACCEDER AL VALOR DEL SIMBOLO CON LA FUNCION apila_valor_simbolo DEL GENERATOR
  }catch(ParseException e) {
 	errorSintactico(e);
  }finally{

@@ -68,15 +68,23 @@ public class Generator {
             }
 
         }else{  //es una variable, se extrae de memoria en memoria
-            apila_valor_simbolo(atr.referencia_simbolo);
-            if (atr.type == Symbol.Types.INT || atr.type == Symbol.Types.BOOL) { //escribir una variable bool o int, se escribe como números
-                codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 1);
-            }else if (atr.type == Symbol.Types.CHAR) { //escribir una variable char
-                codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 0);
-            }
+            apila_simbolo(atr);
         }
+        put_line();
 
 }
+
+    private void apila_simbolo(Attributes atr) {
+        if(atr.referencia_simbolo.type != Symbol.Types.ARRAY) {
+            apila_valor_simbolo(atr.referencia_simbolo);
+        }else{//tendremos que confiar que más adelante nos apilaran el valor con el indice
+            apila_direccion_simbolo(atr.referencia_simbolo);
+        }
+    }
+
+    public void escribo_operador(PCodeInstruction.OpCode operador){
+        codigo_maquina.addInst(operador);
+    }
 
     public void put_line() {
         codigo_maquina.addComment("Put_line");
