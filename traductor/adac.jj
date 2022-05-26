@@ -819,27 +819,30 @@ try{
 Attributes expresion_simple() :
 {Attributes atr_f1=null,atr_f2=null;
 boolean positivo_negativo = false;
-boolean operador_booleano = false;}
+PCodeInstruction.OpCode operador;}
 {
   try{
     (<tSUMA> {positivo_negativo = true;} | <tRESTA> {positivo_negativo = true;} )?
     atr_f1=termino() {  if(positivo_negativo) atr_f1.comprobacion_tipo(Symbol.Types.INT,token); }
-    (operador_booleano = operador_aditivo() atr_f2 =termino() {Attributes.comprobacion_tipo(atr_f1,atr_f2,operador_booleano,token); })*
+    (operador = operador_aditivo() atr_f2 =termino()
+        {Attributes.comprobacion_tipo(atr_f1,atr_f2,operador == PCodeInstruction.OpCode.OR,token);
+         generador_codigo.escribo_operador(operador);
+        }
+    )*
   }catch(ParseException e) {
 	  errorSintactico(e);
   }finally{return atr_f1;}
 }
 
 /* operador_aditivo :=  <tSUMA>| <tRESTA>| <tOR>*/
-boolean operador_aditivo() :
+PCodeInstruction.OpCode operador_aditivo() :
 {}
 {
-//TODO PARA ADELANTAR A LA GENERACIÓN DE CÓDIGO, NECESITAREMOS PASAR EL TIPO DE OPERACION PARA ARRIBA, PUES SE ESCRIBE
-//todo parametro1 parametro2 operacion
+
  try{
-  <tSUMA>{return(false);}
-| <tRESTA>{return(false);}
-| <tOR> {return(true);}
+  <tSUMA>{return(PCodeInstruction.OpCode.PLUS);}
+| <tRESTA>{return(PCodeInstruction.OpCode.SBT);}
+| <tOR> {return(PCodeInstruction.OpCode.OR);}
  }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -848,11 +851,12 @@ boolean operador_aditivo() :
 /*termino := factor ( operador_multiplicativo factor )* */
 Attributes termino() :
 {Attributes atr_f1=null,atr_f2=null;
-boolean operador_booleano = false;}
+PCodeInstruction.OpCode operador;}
 {
   try{
-  atr_f1 =factor() (operador_booleano = operador_multiplicativo() atr_f2= factor() {
-     Attributes.comprobacion_tipo(atr_f1, atr_f2, operador_booleano,token);
+  atr_f1 =factor() (operador = operador_multiplicativo() atr_f2= factor() {
+     Attributes.comprobacion_tipo(atr_f1, atr_f2, operador == PCodeInstruction.OpCode.AND,token);
+     generador_codigo.escribo_operador(operador);
   })*
  }catch(ParseException e) {
 	errorSintactico(e);
@@ -860,15 +864,14 @@ boolean operador_booleano = false;}
 }
 
 /*operador_multiplicativo :=  <tMUL>| <tMOD>| <tDIV>| <tAND>*/
-boolean operador_multiplicativo() :
+PCodeInstruction.OpCode operador_multiplicativo() :
 {}
-{//TODO PARA ADELANTAR A LA GENERACIÓN DE CÓDIGO, NECESITAREMOS PASAR EL TIPO DE OPERACION PARA ARRIBA, PUES SE ESCRIBE
-//todo parametro1 parametro2 operacion
+{
   try{
-  <tMUL> {return false;}
-| <tMOD> {return false;}
-| <tDIV> {return false;}
-| <tAND> {return true;}
+  <tMUL> {return PCodeInstruction.OpCode.TMS;}
+| <tMOD> {return PCodeInstruction.OpCode.MOD;}
+| <tDIV> {return PCodeInstruction.OpCode.DIV;}
+| <tAND> {return PCodeInstruction.OpCode.AND;}
  }catch(ParseException e) {
 	errorSintactico(e);
  }
