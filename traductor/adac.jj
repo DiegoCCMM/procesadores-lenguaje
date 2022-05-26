@@ -667,7 +667,6 @@ void asignacion() :
   atr_v=var_asignacion() t=<tOPAS> atr_e =expresion() { //Se utiliza el token de tOPAS para la info de los errores semanticos
     //if(atr_v.referencia_simbolo != null) System.out.println(atr_v.referencia_simbolo.toString());
     atr_v.comprobacion_asignacion(atr_e,t);
-
   }
  }catch(ParseException e) {
 	errorSintactico(e);
@@ -784,14 +783,14 @@ void mientras_que() :
 
 /*expresion := expresion_simple() (operador_relacional() expresion_simple())?*/
 Attributes expresion() :
-{Attributes atr_e1=null,atr_e2=null; PCodeInstruction.OpCode operador=null;}
+{Attributes atr_e1=null,atr_e2=null; PCodeInstruction.OpCode operador;}
 { try{
   atr_e1=expresion_simple()
   (
     operador = operador_relacional() atr_e2=expresion_simple()
   {
      atr_e1.comprobacion_mismo_tipo(atr_e2,token);
-     //generador_codigo.escribo_operador(operador);
+     generador_codigo.escribo_operador(operador);
   })?
    }catch(ParseException e) {
 	errorSintactico(e);
@@ -820,15 +819,15 @@ try{
 Attributes expresion_simple() :
 {Attributes atr_f1=null,atr_f2=null;
 boolean positivo_negativo = false;
-boolean operador_booleano = false; PCodeInstruction.OpCode operador=null;}
+PCodeInstruction.OpCode operador;}
 {
   try{
     (<tSUMA> {positivo_negativo = true;} | <tRESTA> {positivo_negativo = true;} )?
     atr_f1=termino() {  if(positivo_negativo) atr_f1.comprobacion_tipo(Symbol.Types.INT,token); }
-    (operador_booleano = operador_aditivo(operador) atr_f2 =termino() {
-      Attributes.comprobacion_tipo(atr_f1,atr_f2,operador_booleano,token);
-     // generador_codigo.escribo_operador(operador);
-    }
+    (operador = operador_aditivo() atr_f2 =termino()
+        {Attributes.comprobacion_tipo(atr_f1,atr_f2,operador == PCodeInstruction.OpCode.OR,token);
+         generador_codigo.escribo_operador(operador);
+        }
     )*
   }catch(ParseException e) {
 	  errorSintactico(e);
@@ -836,15 +835,14 @@ boolean operador_booleano = false; PCodeInstruction.OpCode operador=null;}
 }
 
 /* operador_aditivo :=  <tSUMA>| <tRESTA>| <tOR>*/
-boolean operador_aditivo(PCodeInstruction.OpCode operador) :
+PCodeInstruction.OpCode operador_aditivo() :
 {}
 {
-//TODO PARA ADELANTAR A LA GENERACIÓN DE CÓDIGO, NECESITAREMOS PASAR EL TIPO DE OPERACION PARA ARRIBA, PUES SE ESCRIBE
-//todo parametro1 parametro2 operacion
+
  try{
-  <tSUMA>{operador = PCodeInstruction.OpCode.PLUS ;return(false);}
-| <tRESTA>{operador = PCodeInstruction.OpCode.SBT; return(false);}
-| <tOR> {operador = PCodeInstruction.OpCode.OR;return(true);}
+  <tSUMA>{return(PCodeInstruction.OpCode.PLUS);}
+| <tRESTA>{return(PCodeInstruction.OpCode.SBT);}
+| <tOR> {return(PCodeInstruction.OpCode.OR);}
  }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -853,12 +851,12 @@ boolean operador_aditivo(PCodeInstruction.OpCode operador) :
 /*termino := factor ( operador_multiplicativo factor )* */
 Attributes termino() :
 {Attributes atr_f1=null,atr_f2=null;
-boolean operador_booleano = false; PCodeInstruction.OpCode operador=null;}
+PCodeInstruction.OpCode operador;}
 {
   try{
-  atr_f1 =factor() (operador_booleano = operador_multiplicativo(operador) atr_f2= factor() {
-     Attributes.comprobacion_tipo(atr_f1, atr_f2, operador_booleano,token);
-         //  generador_codigo.escribo_operador(operador);
+  atr_f1 =factor() (operador = operador_multiplicativo() atr_f2= factor() {
+     Attributes.comprobacion_tipo(atr_f1, atr_f2, operador == PCodeInstruction.OpCode.AND,token);
+     generador_codigo.escribo_operador(operador);
   })*
  }catch(ParseException e) {
 	errorSintactico(e);
@@ -866,15 +864,14 @@ boolean operador_booleano = false; PCodeInstruction.OpCode operador=null;}
 }
 
 /*operador_multiplicativo :=  <tMUL>| <tMOD>| <tDIV>| <tAND>*/
-boolean operador_multiplicativo(PCodeInstruction.OpCode operador) :
+PCodeInstruction.OpCode operador_multiplicativo() :
 {}
-{//TODO PARA ADELANTAR A LA GENERACIÓN DE CÓDIGO, NECESITAREMOS PASAR EL TIPO DE OPERACION PARA ARRIBA, PUES SE ESCRIBE
-//todo parametro1 parametro2 operacion
+{
   try{
-  <tMUL> {operador = PCodeInstruction.OpCode.TMS; return false;}
-| <tMOD> { operador = PCodeInstruction.OpCode.MOD; return false;}
-| <tDIV> {operador = PCodeInstruction.OpCode.DIV; return false;}
-| <tAND> {operador = PCodeInstruction.OpCode.AND; return true;}
+  <tMUL> {return PCodeInstruction.OpCode.TMS;}
+| <tMOD> {return PCodeInstruction.OpCode.MOD;}
+| <tDIV> {return PCodeInstruction.OpCode.DIV;}
+| <tAND> {return PCodeInstruction.OpCode.AND;}
  }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -903,8 +900,7 @@ Attributes factor() :
     }
     //TODO ESTAS SON LAS HOJAS MÁS IMPORTANTES ESCRIBIR EN EL CODIGO GENERADO LO NECESARIO
 | t=<tID> atr_f = funcion_o_vector(t) /*llamada a funcion o componente de vector*/
-| t= <tVALORENTERO> { atr_f = new Attributes(Integer.parseInt(t.image));
-                       generador_codigo.apila_valor(atr_f.valInt);} //TODO: revisar
+| t= <tVALORENTERO> { atr_f = new Attributes(Integer.parseInt(t.image));}
 | t= <tVALORCHAR>  { atr_f =new Attributes(t.image.charAt(0));}
 | t= <tVALORCADENA> { atr_f = new Attributes(t.image); }
 | <tTRUE> { atr_f = new Attributes(true);}
@@ -937,11 +933,7 @@ Attributes funcion_o_vector(Token t) :
   {
     atr.comprobaciones_para_vectores(simbolo_del_factor, t);
     //generador_codigo.()
-  }
-  | {
-        atr.asignar_simbolo(simbolo_del_factor);
-        generador_codigo.apila_simbolo(atr);
-      } /*epsilon*/ //TODO CASO IDENTIFICADOR, ASI COMO SE ASIGNA EL SIMBOLO AL ATR, VAMOS A ACCEDER AL VALOR DEL SIMBOLO CON LA FUNCION apila_valor_simbolo DEL GENERATOR
+  } | {atr.asignar_simbolo(simbolo_del_factor);} /*epsilon*/ //TODO CASO IDENTIFICADOR, ASI COMO SE ASIGNA EL SIMBOLO AL ATR, VAMOS A ACCEDER AL VALOR DEL SIMBOLO CON LA FUNCION apila_valor_simbolo DEL GENERATOR
  }catch(ParseException e) {
 	errorSintactico(e);
  }finally{
