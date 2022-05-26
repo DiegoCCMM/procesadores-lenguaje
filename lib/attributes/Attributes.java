@@ -274,6 +274,8 @@ public class Attributes implements Cloneable {
         //if(this.parClass == Symbol.ParameterClass.VAL) ErrorSemantico.deteccion("No se puede leer un parametro por valor",t);
         if(this.type == Symbol.Types.FUNCTION) ErrorSemantico.deteccion("No se puede leer una funcion",t);
         if(this.type == Symbol.Types.PROCEDURE) ErrorSemantico.deteccion("No se puede leer un procedimiento",t);
+        if(this.type == Symbol.Types.BOOL) ErrorSemantico.deteccion("No se puede leer un boolean",t);
+
         //if(this.type == Symbol.Types.STRING) ErrorSemantico.deteccion("No se puede leer una cadena",t);
     }
 

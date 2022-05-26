@@ -67,14 +67,22 @@ public class Generator {
 
             }
 
-        }else{  //es una variable, se extrae de memoria en memoria
+        }else{
             apila_simbolo(atr);
+            if (atr.type == Symbol.Types.INT || atr.type == Symbol.Types.BOOL) { //escribir una variable bool o int, se escribe como números
+                codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 1);
+            }else if (atr.type == Symbol.Types.CHAR) { //escribir una variable char
+                codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 0);
+            }
         }
-        put_line();
+
 
 }
+    public void apila_valor(int valor){
+        codigo_maquina.addInst(PCodeInstruction.OpCode.STC, valor);
+    }
 
-    private void apila_simbolo(Attributes atr) {
+    public void apila_simbolo(Attributes atr) {
         if(atr.referencia_simbolo.type != Symbol.Types.ARRAY) {
             apila_valor_simbolo(atr.referencia_simbolo);
         }else{//tendremos que confiar que más adelante nos apilaran el valor con el indice
