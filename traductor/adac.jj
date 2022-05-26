@@ -52,7 +52,7 @@ public class adac {
     catch(ParseException e) {
 		//errorSintactico(e);
    }
-  System.out.println(tabla_simbolos.toString());
+//  System.out.println(tabla_simbolos.toString());
   if(errores_sintactico || ErrorSemantico. getContadorErrores() != 0)
    System.out.println("ERROR");
   else{
@@ -779,10 +779,18 @@ String etiq_FIN,etiq_ELSE; }
 
 /*mientras_que ::= <tWHILE> expresion <tDO> lista_sentencias <tEND>*/
 void mientras_que() :
-{Attributes atr_e=null;}
+{Attributes atr_e=null; String etiq_WHILE, etiq_FIN;}
 {
   try {
-  	<tWHILE> atr_e=expresion() { atr_e.comprobacion_tipo(Symbol.Types.BOOL,token);} <tDO> lista_sentencias() <tEND>
+  	<tWHILE> { etiq_WHILE=  CGUtils.newLabel(); generador_codigo.codigo_maquina.addLabel(etiq_WHILE);}
+  	atr_e=expresion() {
+  	atr_e.comprobacion_tipo(Symbol.Types.BOOL,token);
+  	etiq_FIN=CGUtils.newLabel();
+  	generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.JMF, etiq_FIN);
+
+
+  	} <tDO> lista_sentencias(){generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.JMP, etiq_WHILE);}
+  	<tEND>{generador_codigo.codigo_maquina.addLabel(etiq_FIN);}
   }catch(ParseException e) {
 	  panic_mode(tEND);
 	  errorSintactico(e);

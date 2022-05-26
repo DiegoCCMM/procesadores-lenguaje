@@ -18,7 +18,7 @@ public class Generator {
     }
 
     public void apila_valor_simbolo(Symbol simbolo){
-
+        codigo_maquina.addComment("Acceso a variable "+ simbolo.name);
         SRF_del_simbolo(simbolo);
 
         if(simbolo.parClass == Symbol.ParameterClass.REF){ //las referencias son un puntero a un puntero a valor (los punteros a valor son variables al final)
@@ -150,7 +150,7 @@ public class Generator {
     }
 
     public void lista_asignables(Attributes atr){
-        codigo_maquina.addComment("Leer valor");
+        codigo_maquina.addComment("Leer");
         if(atr.type != Symbol.Types.ARRAY && atr.referencia_simbolo != null ){
             apila_direccion_simbolo(atr.referencia_simbolo);
             if(atr.type == Symbol.Types.INT){
