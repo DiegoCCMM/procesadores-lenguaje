@@ -213,7 +213,7 @@ void programa():
 { }
 {
   <tPROCEDURE> <tID> <tIS> {generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.ENP, "L0");}
-  declaracion_variables() declaracion_acciones() {generador_codigo.codigo_maquina.addLabel("L0");}
+  declaracion_variables() declaracion_acciones() {generador_codigo.codigo_maquina.addLabel(CGUtils.newLabel());}
   bloque_sentencias() <EOF> {generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.LVP);}
 }
 
@@ -493,7 +493,7 @@ void sentencia() :
 {
   try {
 	  leer() <tPC>
-	| skip_linea() <tPC>	 //coge toda la entrada hasta \n
+	| skip_linea() <tPC>	 //coge toda la entrada hasta \n //todo: ver que codigo generar
 	| escribir() <tPC>
 	| escribir_linea() <tPC>
 	| LOOKAHEAD(2) invocacion_procedimiento()
@@ -756,14 +756,21 @@ void argumentos(Symbol simbolo_proc, Token t) :
 
 /*seleccion ::= <tIF> expresion <tTHEN> lista_sentencias (<tELSE> lista_sentencias)? <tEND>*/
 void seleccion() :
-{Attributes atr_e=null;}
+{Attributes atr_e=null;
+String etiq_FIN,etiq_ELSE; }
 {
   try {
-	  <tIF> atr_e =expresion() { atr_e.comprobacion_tipo(Symbol.Types.BOOL,token);}<tTHEN> lista_sentencias()
+	  <tIF> atr_e =expresion() {
+	   atr_e.comprobacion_tipo(Symbol.Types.BOOL,token);
+	   etiq_ELSE = CGUtils.newLabel();
+	   etiq_FIN = CGUtils.newLabel();
+	   generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.JMF, etiq_ELSE);
+	   }<tTHEN> lista_sentencias() {generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.JMP, etiq_FIN);}
+	    {generador_codigo.codigo_maquina.addLabel(etiq_ELSE);}
 	  (
 	    <tELSE> lista_sentencias()
 	  )?
-	  <tEND> /*REVISAR*/
+	  <tEND> {generador_codigo.codigo_maquina.addLabel(etiq_FIN);}
 	}catch(ParseException e) {
 	  panic_mode(tEND);
 	  errorSintactico(e);

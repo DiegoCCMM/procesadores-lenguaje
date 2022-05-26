@@ -114,6 +114,11 @@ public class Generator {
     public void apila_direccion_vector(Symbol sim_v){
         codigo_maquina.addComment("Acceso a componente de vector");
         //TODO: comprobar que se accede a una posicion existente del vector
+        //Comprobacion de indice
+//        codigo_maquina.addInst(PCodeInstruction.OpCode.DUP);
+//        codigo_maquina.addInst(PCodeInstruction.OpCode.STC,0); //El primer indice
+//        codigo_maquina.addInst(PCodeInstruction.OpCode.LT); //TODO: que hacemos en caso de que no se pueda acceder??
+
         apila_direccion_simbolo(sim_v);
         codigo_maquina.addInst(PCodeInstruction.OpCode.PLUS); //Se suma la @ inicial del vector y la posicion
     }
