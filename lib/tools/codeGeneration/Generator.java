@@ -37,6 +37,11 @@ public class Generator {
         }
 
     }
+    //Se supone que el valor a asignar ya esta en la pila
+    public void asignacion(Attributes atr_v){
+        apila_direccion_simbolo(atr_v.referencia_simbolo);
+        codigo_maquina.addInst(PCodeInstruction.OpCode.ASGI);
+    }
 
     private void SRF_del_simbolo(Symbol simbolo) {
         int nivel_del_simbolo = tabla_simbolo.level - simbolo.nivel;
@@ -78,8 +83,18 @@ public class Generator {
 
 
 }
-    public void apila_valor(int valor){
-        codigo_maquina.addInst(PCodeInstruction.OpCode.STC, valor);
+    public void apila_valor(Attributes atr){
+         if (atr.type == Symbol.Types.INT ){
+            codigo_maquina.addInst(PCodeInstruction.OpCode.STC, atr.valInt);
+         }else if (atr.type == Symbol.Types.BOOL){
+             if(atr.valBool){
+                codigo_maquina.addInst(PCodeInstruction.OpCode.STC, 1);
+             }else{
+                codigo_maquina.addInst(PCodeInstruction.OpCode.STC, 0);
+             }
+         }else if (atr.type == Symbol.Types.CHAR){
+             codigo_maquina.addInst(PCodeInstruction.OpCode.STC, atr.valChar);
+         }
     }
 
     public void apila_simbolo(Attributes atr) {

@@ -665,8 +665,8 @@ void asignacion() :
 { try{
     //TODO SI EL ID de var asignacion NO SE ENCUENTRA EN LA TABLA DE SIMBOLOS SE CREA UNDEFINED O SE CREA CON EL TIPO ESPERADO DEL ATRIBUTO
   atr_v=var_asignacion() t=<tOPAS> atr_e =expresion() { //Se utiliza el token de tOPAS para la info de los errores semanticos
-    //if(atr_v.referencia_simbolo != null) System.out.println(atr_v.referencia_simbolo.toString());
-    atr_v.comprobacion_asignacion(atr_e,t);
+      atr_v.comprobacion_asignacion(atr_e,t);
+      generador_codigo.asignacion(atr_v);
   }
  }catch(ParseException e) {
 	errorSintactico(e);
@@ -900,11 +900,11 @@ Attributes factor() :
     }
     //TODO ESTAS SON LAS HOJAS MÁS IMPORTANTES ESCRIBIR EN EL CODIGO GENERADO LO NECESARIO
 | t=<tID> atr_f = funcion_o_vector(t) /*llamada a funcion o componente de vector*/
-| t= <tVALORENTERO> { atr_f = new Attributes(Integer.parseInt(t.image));}
-| t= <tVALORCHAR>  { atr_f =new Attributes(t.image.charAt(0));}
-| t= <tVALORCADENA> { atr_f = new Attributes(t.image); }
-| <tTRUE> { atr_f = new Attributes(true);}
-| <tFALSE> { atr_f = new Attributes(false);}
+| t= <tVALORENTERO> { atr_f = new Attributes(Integer.parseInt(t.image)); generador_codigo.apila_valor(atr_f);}
+| t= <tVALORCHAR>  { atr_f =new Attributes(t.image.charAt(0));generador_codigo.apila_valor(atr_f);}
+| t= <tVALORCADENA> { atr_f = new Attributes(t.image); generador_codigo.apila_valor(atr_f);}
+| <tTRUE> { atr_f = new Attributes(true);generador_codigo.apila_valor(atr_f);}
+| <tFALSE> { atr_f = new Attributes(false);generador_codigo.apila_valor(atr_f);}
  }catch(ParseException e) {
 	errorSintactico(e);
  }finally{
@@ -933,7 +933,10 @@ Attributes funcion_o_vector(Token t) :
   {
     atr.comprobaciones_para_vectores(simbolo_del_factor, t);
     //generador_codigo.()
-  } | {atr.asignar_simbolo(simbolo_del_factor);} /*epsilon*/ //TODO CASO IDENTIFICADOR, ASI COMO SE ASIGNA EL SIMBOLO AL ATR, VAMOS A ACCEDER AL VALOR DEL SIMBOLO CON LA FUNCION apila_valor_simbolo DEL GENERATOR
+  } | {/*epsilon*/ //TODO CASO IDENTIFICADOR, ASI COMO SE ASIGNA EL SIMBOLO AL ATR, VAMOS A ACCEDER AL VALOR DEL SIMBOLO CON LA FUNCION apila_valor_simbolo DEL GENERATOR
+      atr.asignar_simbolo(simbolo_del_factor);
+      generador_codigo.apila_valor_simbolo(simbolo_del_factor);
+    }
  }catch(ParseException e) {
 	errorSintactico(e);
  }finally{
