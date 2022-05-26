@@ -52,7 +52,7 @@ public class adac {
     catch(ParseException e) {
 		//errorSintactico(e);
    }
-  //System.out.println(tabla_simbolos.toString());
+  System.out.println(tabla_simbolos.toString());
   if(errores_sintactico || ErrorSemantico. getContadorErrores() != 0)
    System.out.println("ERROR");
   else{
@@ -700,6 +700,7 @@ Attributes var_vector(Token t) :
   <tAV> atr=expresion() <tCV>
   { if (atr !=null)  {
       atr.comprobaciones_para_vectores(simbolo_del_factor, t);
+      generador_codigo.apila_direccion_vector(simbolo_del_factor);
     return atr;}
     else return new Attributes();
     }
@@ -932,8 +933,8 @@ Attributes funcion_o_vector(Token t) :
   <tAV> atr = expresion() <tCV>
   {
     atr.comprobaciones_para_vectores(simbolo_del_factor, t);
-    //generador_codigo.()
-  } | {/*epsilon*/ //TODO CASO IDENTIFICADOR, ASI COMO SE ASIGNA EL SIMBOLO AL ATR, VAMOS A ACCEDER AL VALOR DEL SIMBOLO CON LA FUNCION apila_valor_simbolo DEL GENERATOR
+    generador_codigo.apila_valor_vector(simbolo_del_factor); //TODO: revisar
+  } | {/*epsilon*/
       atr.asignar_simbolo(simbolo_del_factor);
       generador_codigo.apila_valor_simbolo(simbolo_del_factor);
     }

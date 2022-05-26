@@ -2,6 +2,7 @@ package lib.tools.codeGeneration;
 
 import lib.attributes.Attributes;
 import lib.symbolTable.Symbol;
+import lib.symbolTable.SymbolArray;
 import lib.symbolTable.SymbolTable;
 
 import java.io.FileDescriptor;
@@ -37,10 +38,15 @@ public class Generator {
         }
 
     }
-    //Se supone que el valor a asignar ya esta en la pila
+    //Se supone que el valor a asignar ya esta en la pila --> valor variable --> ASGI
     public void asignacion(Attributes atr_v){
-        apila_direccion_simbolo(atr_v.referencia_simbolo);
-        codigo_maquina.addInst(PCodeInstruction.OpCode.ASGI);
+        codigo_maquina.addComment("Asignacion");
+        if(atr_v.referencia_simbolo.type != Symbol.Types.ARRAY){
+            apila_direccion_simbolo(atr_v.referencia_simbolo);
+            codigo_maquina.addInst(PCodeInstruction.OpCode.ASGI);
+        }else{
+            codigo_maquina.addInst(PCodeInstruction.OpCode.ASG);
+        }
     }
 
     private void SRF_del_simbolo(Symbol simbolo) {
@@ -50,17 +56,15 @@ public class Generator {
 
     public void lista_escribibles(Attributes atr) {
         codigo_maquina.addComment("Escribir expresion");
+        //El valor de la expresion esta en la pila
         if (atr.referencia_simbolo == null) { //no es una variable
             if (atr.type == Symbol.Types.INT || atr.type == Symbol.Types.BOOL) { //escribir una constante bool o int, se escribe como números
-
-                codigo_maquina.addInst(PCodeInstruction.OpCode.STC, atr.valInt);
+              //  codigo_maquina.addInst(PCodeInstruction.OpCode.STC, atr.valInt);
                 codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 1);
 
             } else if (atr.type == Symbol.Types.CHAR) { //escribir una constante char
-
-                codigo_maquina.addInst(PCodeInstruction.OpCode.STC, atr.valChar);
+               // codigo_maquina.addInst(PCodeInstruction.OpCode.STC, atr.valChar);
                 codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 0);
-
             } else if (atr.type == Symbol.Types.STRING) { //escribir una constante cadena
                 int unicode_del_caracter;
 
@@ -73,11 +77,20 @@ public class Generator {
             }
 
         }else{
-            apila_simbolo(atr);
-            if (atr.type == Symbol.Types.INT || atr.type == Symbol.Types.BOOL) { //escribir una variable bool o int, se escribe como números
-                codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 1);
-            }else if (atr.type == Symbol.Types.CHAR) { //escribir una variable char
-                codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 0);
+            if(atr.type == Symbol.Types.ARRAY){
+                if (((SymbolArray) atr.referencia_simbolo).baseType == Symbol.Types.INT || ((SymbolArray) atr.referencia_simbolo).baseType == Symbol.Types.BOOL) { //escribir una variable bool o int, se escribe como números
+                    codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 1);
+                }else if (((SymbolArray) atr.referencia_simbolo).baseType == Symbol.Types.CHAR) { //escribir una variable char
+                    codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 0);
+                }
+
+            }else{
+               // apila_simbolo(atr);
+                if (atr.type == Symbol.Types.INT || atr.type == Symbol.Types.BOOL) { //escribir una variable bool o int, se escribe como números
+                    codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 1);
+                }else if (atr.type == Symbol.Types.CHAR) { //escribir una variable char
+                    codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 0);
+                }
             }
         }
 
@@ -95,6 +108,20 @@ public class Generator {
          }else if (atr.type == Symbol.Types.CHAR){
              codigo_maquina.addInst(PCodeInstruction.OpCode.STC, atr.valChar);
          }
+    }
+
+    //En la pila esta apilada la posicion a la que se quiere acceder del vector
+    public void apila_direccion_vector(Symbol sim_v){
+        codigo_maquina.addComment("Acceso a componente de vector");
+        //TODO: comprobar que se accede a una posicion existente del vector
+        apila_direccion_simbolo(sim_v);
+        codigo_maquina.addInst(PCodeInstruction.OpCode.PLUS); //Se suma la @ inicial del vector y la posicion
+    }
+
+    //En la pila esta apilada la posicion a la que se quiere acceder del vector
+    public void apila_valor_vector(Symbol sim_v){
+        apila_direccion_vector(sim_v);
+        codigo_maquina.addInst(PCodeInstruction.OpCode.DRF);
     }
 
     public void apila_simbolo(Attributes atr) {
