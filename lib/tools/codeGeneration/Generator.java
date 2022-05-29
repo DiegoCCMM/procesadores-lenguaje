@@ -66,14 +66,7 @@ public class Generator {
                // codigo_maquina.addInst(PCodeInstruction.OpCode.STC, atr.valChar);
                 codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 0);
             } else if (atr.type == Symbol.Types.STRING) { //escribir una constante cadena
-                int unicode_del_caracter;
-
-                for (int i = 1; i < atr.valString.length() - 1; i++) {  //empiezo en 1 y acabo en length - 1 porque el match del token incluye las ""
-                    unicode_del_caracter = String.valueOf(atr.valString.charAt(i)).codePointAt(0);
-                    codigo_maquina.addInst(PCodeInstruction.OpCode.STC, unicode_del_caracter);
-                    codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 0);
-                }
-
+                escribe_string_por_pantalla(atr.valString);
             }
 
         }else{
@@ -96,6 +89,16 @@ public class Generator {
 
 
 }
+
+    private void escribe_string_por_pantalla(String atr) {
+        int unicode_del_caracter;
+        for (int i = 1; i < atr.length() - 1; i++) {  //empiezo en 1 y acabo en length - 1 porque el match del token incluye las ""
+            unicode_del_caracter = String.valueOf(atr.charAt(i)).codePointAt(0);
+            codigo_maquina.addInst(PCodeInstruction.OpCode.STC, unicode_del_caracter);
+            codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 0);
+        }
+    }
+
     public void apila_valor(Attributes atr){
          if (atr.type == Symbol.Types.INT ){
             codigo_maquina.addInst(PCodeInstruction.OpCode.STC, atr.valInt);
@@ -127,8 +130,14 @@ public class Generator {
     public void apila_valor_vector(Symbol sim_v){
         apila_direccion_vector(sim_v);
         codigo_maquina.addInst(PCodeInstruction.OpCode.DRF);
-    }
+}
 
+    public void apila_valor(int valor){
+        codigo_maquina.addInst(PCodeInstruction.OpCode.STC, valor);
+    }
+    /*
+     *  Si el simbolo es un array sólo la dirección, alguien nos tendrá que indexar, de otra maenra, apilamos el valor
+     */
     public void apila_simbolo(Attributes atr) {
         if(atr.referencia_simbolo.type != Symbol.Types.ARRAY) {
             apila_valor_simbolo(atr.referencia_simbolo);
@@ -147,6 +156,32 @@ public class Generator {
         codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 0);
         codigo_maquina.addInst(PCodeInstruction.OpCode.STC, 10);
         codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 0);
+    }
+    /*
+     * Asumimos que tenemos en la pila el valor a transformar
+     */
+    public void int2char(){
+        String etiq_error_int2char =  CGUtils.newLabel();
+        String post_error_int2char = CGUtils.newLabel();
+
+        codigo_maquina.addComment("Comprobaciones int2char");
+        //duplicamos el valor que tenemos en la función, al final, queremos hacer dos comprobaciones
+        //y que el valor sigue en la pila para una posible asignación
+        codigo_maquina.addInst(PCodeInstruction.OpCode.DUP);
+        codigo_maquina.addInst(PCodeInstruction.OpCode.STC, 0);
+        codigo_maquina.addInst(PCodeInstruction.OpCode.GTE);
+        codigo_maquina.addInst(PCodeInstruction.OpCode.JMF, etiq_error_int2char);
+        //se ha comprobado que el valor es >= a 0
+        codigo_maquina.addInst(PCodeInstruction.OpCode.DUP);
+        codigo_maquina.addInst(PCodeInstruction.OpCode.STC, 255);
+        codigo_maquina.addInst(PCodeInstruction.OpCode.LTE);
+        codigo_maquina.addInst(PCodeInstruction.OpCode.JMF, etiq_error_int2char);
+        codigo_maquina.addInst(PCodeInstruction.OpCode.JMP, post_error_int2char);
+        //se ha comprobado que el valor es <= a 255
+        codigo_maquina.addLabel(etiq_error_int2char);
+        escribe_string_por_pantalla("El valor entero en un int2char tiene que ser mayor que 0 y menor de 255");
+        codigo_maquina.addInst(PCodeInstruction.OpCode.LVP);
+        codigo_maquina.addLabel(post_error_int2char);
     }
 
     public void lista_asignables(Attributes atr){

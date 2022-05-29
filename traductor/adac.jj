@@ -905,7 +905,7 @@ Attributes factor() :
 | <tAP> atr_f = expresion() <tCP>
 | <tINT2CHAR> <tAP> atr_e =expresion() <tCP> {
         if(atr_e.comprobacion_tipo(Symbol.Types.INT,token)){
-            //TODO: int tiene que estár tiene que estar entre 0 y 255 - GC
+            generador_codigo.int2char();
             atr_f = new Attributes(' ');
         }
        }
