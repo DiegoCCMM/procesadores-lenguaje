@@ -92,6 +92,7 @@ public class Generator {
 
     private void escribe_string_por_pantalla(String atr) {
         int unicode_del_caracter;
+        codigo_maquina.addComment("escribimos por pantalla: " + atr);
         for (int i = 1; i < atr.length() - 1; i++) {  //empiezo en 1 y acabo en length - 1 porque el match del token incluye las ""
             unicode_del_caracter = String.valueOf(atr.charAt(i)).codePointAt(0);
             codigo_maquina.addInst(PCodeInstruction.OpCode.STC, unicode_del_caracter);
@@ -116,12 +117,29 @@ public class Generator {
     //En la pila esta apilada la posicion a la que se quiere acceder del vector
     public void apila_direccion_vector(Symbol sim_v){
         codigo_maquina.addComment("Acceso a componente de vector");
-        //TODO: comprobar que se accede a una posicion existente del vector
-        //Comprobacion de indice
-//        codigo_maquina.addInst(PCodeInstruction.OpCode.DUP);
-//        codigo_maquina.addInst(PCodeInstruction.OpCode.STC,0); //El primer indice
-//        codigo_maquina.addInst(PCodeInstruction.OpCode.LT); //TODO: que hacemos en caso de que no se pueda acceder??
+        String segmentation_fault = CGUtils.newLabel();
+        String continuacion_normal = CGUtils.newLabel();
 
+        int maxInd = 0;
+        if(sim_v instanceof SymbolArray){
+            maxInd = ((SymbolArray) sim_v).maxInd;
+        }
+        //Comprobacion de indice
+        codigo_maquina.addInst(PCodeInstruction.OpCode.DUP);
+        codigo_maquina.addInst(PCodeInstruction.OpCode.STC, 0);
+        codigo_maquina.addInst(PCodeInstruction.OpCode.GTE);
+        codigo_maquina.addInst(PCodeInstruction.OpCode.JMF, segmentation_fault);
+        //se ha comprobado que el valor es >= a 0
+        codigo_maquina.addInst(PCodeInstruction.OpCode.DUP);
+        codigo_maquina.addInst(PCodeInstruction.OpCode.STC, maxInd);
+        codigo_maquina.addInst(PCodeInstruction.OpCode.LTE);
+        codigo_maquina.addInst(PCodeInstruction.OpCode.JMF, segmentation_fault);
+        codigo_maquina.addInst(PCodeInstruction.OpCode.JMP, continuacion_normal);
+        //se ha comprobado que el valor es <= a 255
+        codigo_maquina.addLabel(segmentation_fault);
+        escribe_string_por_pantalla(" El indice usado para el vector " + sim_v.name + " es erroneo ");
+        codigo_maquina.addInst(PCodeInstruction.OpCode.LVP);
+        codigo_maquina.addLabel(continuacion_normal);
         apila_direccion_simbolo(sim_v);
         codigo_maquina.addInst(PCodeInstruction.OpCode.PLUS); //Se suma la @ inicial del vector y la posicion
     }
@@ -157,12 +175,29 @@ public class Generator {
         codigo_maquina.addInst(PCodeInstruction.OpCode.STC, 10);
         codigo_maquina.addInst(PCodeInstruction.OpCode.WRT, 0);
     }
+
+    public void skip_line(){
+        codigo_maquina.addComment("Skip_line");
+        String bucle_skip_line =  CGUtils.newLabel();
+        codigo_maquina.addLabel(bucle_skip_line);
+        codigo_maquina.addInst(PCodeInstruction.OpCode.SRF, 0, tabla_simbolo.direcciones_de_los_bloques.get(tabla_simbolo.level)); //SRF 0 LA ULTIMA DIRECCION NO ASIGNADA
+        codigo_maquina.addInst(PCodeInstruction.OpCode.RD, 0);
+        //hemos leido de entrada estandar y tenemos el valor en la ultima @ no asignada
+        codigo_maquina.addInst(PCodeInstruction.OpCode.STC, 10); //\n en codigo ascii
+        codigo_maquina.addInst(PCodeInstruction.OpCode.SRF, 0, tabla_simbolo.direcciones_de_los_bloques.get(tabla_simbolo.level));
+        codigo_maquina.addInst(PCodeInstruction.OpCode.DRF);
+        codigo_maquina.addInst(PCodeInstruction.OpCode.EQ);
+        //leemos el valor y lo comparamos con \n
+        codigo_maquina.addInst(PCodeInstruction.OpCode.JMF, bucle_skip_line);
+        //si no es \n repetimos
+    }
+
     /*
      * Asumimos que tenemos en la pila el valor a transformar
      */
     public void int2char(){
         String etiq_error_int2char =  CGUtils.newLabel();
-        String post_error_int2char = CGUtils.newLabel();
+        String continuacion_normal = CGUtils.newLabel();
 
         codigo_maquina.addComment("Comprobaciones int2char");
         //duplicamos el valor que tenemos en la función, al final, queremos hacer dos comprobaciones
@@ -176,12 +211,12 @@ public class Generator {
         codigo_maquina.addInst(PCodeInstruction.OpCode.STC, 255);
         codigo_maquina.addInst(PCodeInstruction.OpCode.LTE);
         codigo_maquina.addInst(PCodeInstruction.OpCode.JMF, etiq_error_int2char);
-        codigo_maquina.addInst(PCodeInstruction.OpCode.JMP, post_error_int2char);
+        codigo_maquina.addInst(PCodeInstruction.OpCode.JMP, continuacion_normal);
         //se ha comprobado que el valor es <= a 255
         codigo_maquina.addLabel(etiq_error_int2char);
-        escribe_string_por_pantalla("El valor entero en un int2char tiene que ser mayor que 0 y menor de 255");
+        escribe_string_por_pantalla(" El valor entero en un int2char tiene que ser mayor que 0 y menor de 255 ");
         codigo_maquina.addInst(PCodeInstruction.OpCode.LVP);
-        codigo_maquina.addLabel(post_error_int2char);
+        codigo_maquina.addLabel(continuacion_normal);
     }
 
     public void lista_asignables(Attributes atr){

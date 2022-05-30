@@ -493,7 +493,7 @@ void sentencia() :
 {
   try {
 	  leer() <tPC>
-	| skip_linea() <tPC>	 //coge toda la entrada hasta \n //todo: ver que codigo generar
+	| skip_linea() <tPC>
 	| escribir() <tPC>
 	| escribir_linea() <tPC>
 	| LOOKAHEAD(2) invocacion_procedimiento()
@@ -591,7 +591,7 @@ Attributes asignable_vector(Symbol sim_v, Token t_v) :
 void skip_linea() :
 {}
 { try{
-  <tSKIP_L> <tAP> <tCP>
+  <tSKIP_L> <tAP> <tCP> { generador_codigo.skip_line(); }
  }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -914,10 +914,9 @@ Attributes factor() :
             atr_f = new Attributes(0);
         }
     }
-    //TODO ESTAS SON LAS HOJAS MÁS IMPORTANTES ESCRIBIR EN EL CODIGO GENERADO LO NECESARIO
 | t=<tID> atr_f = funcion_o_vector(t) /*llamada a funcion o componente de vector*/
 | t= <tVALORENTERO> { atr_f = new Attributes(Integer.parseInt(t.image)); generador_codigo.apila_valor(atr_f);}
-| t= <tVALORCHAR>  { atr_f =new Attributes(t.image.charAt(0));generador_codigo.apila_valor(atr_f);}
+| t= <tVALORCHAR>  { atr_f =new Attributes(t.image.charAt(1));generador_codigo.apila_valor(atr_f);}
 | t= <tVALORCADENA> { atr_f = new Attributes(t.image); generador_codigo.apila_valor(atr_f);}
 | <tTRUE> { atr_f = new Attributes(true);generador_codigo.apila_valor(atr_f);}
 | <tFALSE> { atr_f = new Attributes(false);generador_codigo.apila_valor(atr_f);}
@@ -944,11 +943,11 @@ Attributes funcion_o_vector(Token t) :
     if(atr==null)
         SemanticFunctions.comprobaciones_para_acciones_sin_parametros(simbolo_del_factor,t);
     atr = new Attributes(); atr.returnType_al_tipo(simbolo_del_factor);
-  } |   //TODO CASO VECTOR, ES RECURSIVO, LO ESCRIBIRA LA NUEVA LLAMADA A EXPRESION
+  } |
   <tAV> atr = expresion() <tCV>
   {
     atr.comprobaciones_para_vectores(simbolo_del_factor, t);
-    generador_codigo.apila_valor_vector(simbolo_del_factor); //TODO: revisar
+    generador_codigo.apila_valor_vector(simbolo_del_factor);
   } | {/*epsilon*/
       atr.asignar_simbolo(simbolo_del_factor);
       generador_codigo.apila_valor_simbolo(simbolo_del_factor);
