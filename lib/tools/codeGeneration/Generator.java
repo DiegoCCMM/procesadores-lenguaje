@@ -2,8 +2,11 @@ package lib.tools.codeGeneration;
 
 import lib.attributes.Attributes;
 import lib.symbolTable.Symbol;
+import lib.symbolTable.*;
 import lib.symbolTable.SymbolArray;
 import lib.symbolTable.SymbolTable;
+
+import java.util.ArrayList;
 
 import java.io.FileDescriptor;
 import java.io.FileWriter;
@@ -230,6 +233,20 @@ public class Generator {
             }else if(atr.type == Symbol.Types.CHAR){
                 codigo_maquina.addInst(PCodeInstruction.OpCode.RD,0);
             }
+        }
+    }
+
+    public void eliminarDRF(SymbolFunction simbolo_funcion, SymbolProcedure simbolo_procedimiento, int indice_parametro){
+        if( simbolo_funcion != null && simbolo_funcion.parList.get(indice_parametro).parClass ==  Symbol.ParameterClass.REF)
+                 codigo_maquina.code.remove(codigo_maquina.code.size()-1);
+        if(simbolo_procedimiento != null && simbolo_procedimiento.parList.get(indice_parametro).parClass ==  Symbol.ParameterClass.REF)
+                codigo_maquina.code.remove(codigo_maquina.code.size()-1);
+    }
+
+    public void asignar_parametros(ArrayList<Symbol> parametros_formales){
+        for (int i= parametros_formales.size()-1; i>=0; i--){
+            SRF_del_simbolo(parametros_formales.get(i));
+            codigo_maquina.addInst(PCodeInstruction.OpCode.ASGI);
         }
     }
 

@@ -4,7 +4,7 @@
    DEBUG_PARSER = false;
 }
 
-PARSER_BEGIN(adac)
+PARSER_BEGIN(adac_4)
 package traductor;
 
 import lib.symbolTable.SymbolTable;
@@ -17,7 +17,7 @@ import lib.tools.codeGeneration.*;
 import java.util.*;
 import java.io.IOException;
 
-public class adac {
+public class adac_4 {
 
    static SymbolTable tabla_simbolos = new SymbolTable();
    static SemanticFunctions SemFunc = new SemanticFunctions();
@@ -29,17 +29,17 @@ public class adac {
 
     public static void main(String [] args)
   {
-    adac parser;
+    adac_4 parser;
     try
     {
       if (args.length == 0)
       { //entrada desde stdin
-        parser = new adac(System.in);
+        parser = new adac_4(System.in);
         System.out.println("Leyendo de la entrada estandar...");
       }
       else
       { //entrada desde fichero en args[0]
-        parser = new adac(new java.io.FileInputStream(args [0]));
+        parser = new adac_4(new java.io.FileInputStream(args [0]));
       }
       parser.programa(); //invoca simbolo inicial de la gramatica
     }
@@ -68,7 +68,7 @@ public class adac {
   static void errorLexico(Token t) {
     System.err.println("ERROR LEXICO (" + SimpleCharStream.getBeginLine() +
     ", " + SimpleCharStream.getBeginColumn() + "): simbolo no reconocido: <" +
-    SimpleCharStream.GetImage().charAt(adacTokenManager.curLexState) + ">");
+    SimpleCharStream.GetImage().charAt(adac_4TokenManager.curLexState) + ">");
   }
 
 
@@ -83,10 +83,10 @@ public class adac {
   }
 
   static void panic_mode(int kind) {
-    Token t = adac.getNextToken();
+    Token t = adac_4.getNextToken();
     while (token.kind != kind && token.kind != EOF)
     {
-      token = adac.getNextToken();
+      token = adac_4.getNextToken();
     }
     String error_msg = "PANIC MODE (<" + t.beginLine + ", " +
     t.beginColumn + ">) : ignorando entrada hasta ";
@@ -100,7 +100,7 @@ public class adac {
 
 
 }
-PARSER_END(adac)
+PARSER_END(adac_4)
 
 TOKEN_MGR_DECLS: {
 
@@ -210,10 +210,10 @@ TOKEN : /*Separadores*/
 
 /*programa ::= <tPROCEDURE> <tID> <tIS> declaracion_variables declaracion_acciones bloque_sentencias <EOF> */
 void programa():
-{ }
+{String tag_main = CGUtils.newLabel();}
 {
-  <tPROCEDURE> <tID> <tIS> {generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.ENP, "L0");}
-  declaracion_variables() declaracion_acciones() {generador_codigo.codigo_maquina.addLabel(CGUtils.newLabel());}
+  <tPROCEDURE> <tID> <tIS> {generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.ENP, tag_main);}
+  declaracion_variables() declaracion_acciones() {generador_codigo.codigo_maquina.addLabel(tag_main);}
   bloque_sentencias() <EOF> {generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.LVP);}
 }
 
@@ -223,7 +223,7 @@ void declaracion_variables():
 {}
 {
    try {
-     ( declaracion() <tPC> )*
+     ( declaracion() <tPC> )* //TODO: declaracion acciones anidada
  }catch(ParseException e) {
 	panic_mode(tPC);
 	errorSintactico(e);
@@ -236,7 +236,7 @@ void declaracion():
 {
   try {
   	tipo_variable = tipo_variables() lista_vars(tipo_variable)
-  	| declaracion_accion()
+  //	| declaracion_accion() //TODO: revisar
  }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -321,23 +321,27 @@ void declaracion_acciones() :
 
 /*declaracion_accion ::= declaracion_funcion | declaracion_proc */
 void declaracion_accion() :
-{}
+{String tag = CGUtils.newLabel();
+generador_codigo.codigo_maquina.addLabel(tag);}
 {
                                             //TODO CREAR UNA LABEL CON EL CGUtils Y RECORDARLA para las invocaciones
   try {
-  declaracion_funcion() | declaracion_proc()
+  declaracion_funcion(tag) | declaracion_proc(tag)
+
    }catch(ParseException e) {
 	errorSintactico(e);
  }
+
 }
 
 /*declaracion_funcion ::= cabecera_funcion declaracion_variables bloque_sentencias*/
-void declaracion_funcion() :
+void declaracion_funcion(String tag) :
 {} //token ya existe en adac, no hay que declararlo
 {
 	try {
-  cabecera_funcion() declaracion_variables() bloque_sentencias()  //TODO ACABAR EN CSF PARA DEVOLVER EL PC A DONDE ESTABA
-    {tabla_simbolos.removeBlock();
+  cabecera_funcion(tag) declaracion_variables() bloque_sentencias()
+    {generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.CSF);
+    tabla_simbolos.removeBlock();
      if(!hay_return){
         ErrorSemantico.deteccion("Las funciones tienen que terminar con un return",token);
      }
@@ -350,7 +354,7 @@ void declaracion_funcion() :
 }
 
 /*cabecera_funcion ::= <tFUNCTION> tipo_variables <tID> parametros_formales <tIS>*/
-void cabecera_funcion() :
+void cabecera_funcion(String tag) :
 {Token t = null;
 ArrayList<Symbol> parametros_formales = new ArrayList<Symbol>();
 Symbol.Types tipo_func;
@@ -360,13 +364,15 @@ SymbolFunction simbolo_funcion;}
   <tFUNCTION> tipo_func = tipo_variables() t = <tID>
     {   tipo_funcion = tipo_func;
 
-        simbolo_funcion = new SymbolFunction(t.image, parametros_formales, tipo_func);
+        simbolo_funcion = new SymbolFunction(t.image, parametros_formales, tipo_func,tag);
         if(simbolo_funcion != null){
             tabla_simbolos.insertSymbol(simbolo_funcion);
             tabla_simbolos.insertBlock();
         }
+
     }
   parametros_formales(simbolo_funcion) <tIS>
+  {generador_codigo.asignar_parametros(parametros_formales);}
    }catch(ParseException e) {
 	errorSintactico(e);
    }catch(AlreadyDefinedSymbolException e){
@@ -375,30 +381,32 @@ SymbolFunction simbolo_funcion;}
 }
 
 /*declaracion_proc ::= cabecera_proc declaracion_variables bloque_sentencias*/
-void declaracion_proc() :
+void declaracion_proc(String tag) :
 {}
 { try{
-  cabecera_proc() declaracion_variables() bloque_sentencias()
-  {tabla_simbolos.removeBlock();} //TODO ACABAR EN CSF PARA DEVOLVER EL PC A DONDE ESTABA
+  cabecera_proc(tag) declaracion_variables() bloque_sentencias()
+  {generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.CSF);
+  tabla_simbolos.removeBlock();}
    }catch(ParseException e) {
 	errorSintactico(e);
  }
 }
 
 /*cabecera_proc ::= <tPROCEDURE> <tID> parametros_formales <tIS>*/
-void cabecera_proc() :
+void cabecera_proc(String tag) :
 {Token t = null;
 ArrayList<Symbol> parm_list = new ArrayList<Symbol>();
 SymbolProcedure simbolo_procedure;}
 { try{
   <tPROCEDURE> t = <tID>
-  {simbolo_procedure = new SymbolProcedure(t.image, parm_list);
+  {simbolo_procedure = new SymbolProcedure(t.image, parm_list, tag);
     if(simbolo_procedure != null){
         tabla_simbolos.insertSymbol(simbolo_procedure);
         tabla_simbolos.insertBlock();
     }
   }
   parametros_formales(simbolo_procedure) <tIS>
+    {generador_codigo.asignar_parametros(parm_list);}
    }catch(ParseException e) {
 	errorSintactico(e);
    }catch(AlreadyDefinedSymbolException e){
@@ -731,12 +739,12 @@ void invocacion_procedimiento() : /*IMPORTANTE TIENE QUE SER PROCEDIMIENTO EN EL
     }catch(SymbolNotFoundException e){
         ErrorSemantico.deteccion(e, t);
     }
-	  	} argumentos(simbolo_proc,t) <tPC> //TODO PARA LOS ARGUMENTOS, SI EL PARAMETRO DE LA ACCION PIDE UNA REFERENCIA BORRAR DRF
-	  	                                 //TODO PARA LOS PARAMETROS POR VALOR YA SE APILARIA BIEN
-	  	                                 //TODO DESPUES DE APILAR LOS VALORES OSF
+	  	} argumentos(simbolo_proc,t) <tPC>  //TODO DESPUES DE APILAR LOS VALORES OSF
 	  	                                 //TODO OSF 4 0 1 <- donde se encuentra en el PC la primera instrucción de la función
                                          //4 -> tamaño del bloque que invoca el procedimiento, 0 1 2 y 3 están ocupadas por el
                                          //0 -> cuantas componentes del display hay que ocultar
+      { generador_codigo.codigo_maquina.addOSFInst(tabla_simbolos.direcciones_de_los_bloques.get(tabla_simbolos.level),
+      tabla_simbolos.level- simbolo_proc.nivel,((SymbolProcedure) simbolo_proc).tag);}
 	  }catch(ParseException e) {
 		  panic_mode(tPC);
 		  errorSintactico(e);
@@ -950,13 +958,14 @@ Attributes funcion_o_vector(Token t) :
     }
 }
 {
-  try{  //TODO CASO DE FUNCION, NO NOS METERMOS AUN CON LO QUE SE ESCRIBE EN EL CODIGO
-  <tAP> {atr=null;}(atr= lista_uno_o_mas_exps(simbolo_del_factor, t) )? <tCP> { //TODO PARA LOS ARGUMENTOS, SI EL PARAMETRO DE LA ACCION PIDE UNA REFERENCIA BORRAR EL DRF
-                                                                            //TODO PARA LOS PARAMETROS POR VALOR YA SE APILARIA BIEN
-                                                                            //TODO DESPUES DE APILAR LOS VALORES OSF
+  try{
+  <tAP> {atr=null;}(atr= lista_uno_o_mas_exps(simbolo_del_factor, t) )? <tCP> {
+      generador_codigo.codigo_maquina.addOSFInst(tabla_simbolos.direcciones_de_los_bloques.get(tabla_simbolos.level),
+      tabla_simbolos.level- simbolo_del_factor.nivel,((SymbolFunction) simbolo_del_factor).tag);
     if(atr==null)
         SemanticFunctions.comprobaciones_para_acciones_sin_parametros(simbolo_del_factor,t);
     atr = new Attributes(); atr.returnType_al_tipo(simbolo_del_factor);
+
   } |
   <tAV> atr = expresion() <tCV>
   {
@@ -992,10 +1001,12 @@ Attributes lista_uno_o_mas_exps(Symbol simbolo_de_la_accion, Token t) :
   try{
   atr = expresion()
     { atr.es_parametro_de_accion(simbolo_funcion, simbolo_procedimiento, indice_parametro,t);
+    generador_codigo.eliminarDRF(simbolo_funcion, simbolo_procedimiento, indice_parametro);
     indice_parametro++;}
   (<tCOMA> atr = expresion()
    {
     atr.es_parametro_de_accion(simbolo_funcion, simbolo_procedimiento, indice_parametro,t);
+    generador_codigo.eliminarDRF(simbolo_funcion, simbolo_procedimiento, indice_parametro);
     indice_parametro++;}
   )*{
      SemanticFunctions.comprobacion_numero_argumentos(simbolo_funcion, simbolo_procedimiento, indice_parametro,t);
