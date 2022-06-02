@@ -236,6 +236,7 @@ void declaracion():
 {
   try {
   	tipo_variable = tipo_variables() lista_vars(tipo_variable)
+  	| declaracion_accion()
  }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -322,6 +323,7 @@ void declaracion_acciones() :
 void declaracion_accion() :
 {}
 {
+                                            //TODO CREAR UNA LABEL CON EL CGUtils Y RECORDARLA para las invocaciones
   try {
   declaracion_funcion() | declaracion_proc()
    }catch(ParseException e) {
@@ -334,7 +336,7 @@ void declaracion_funcion() :
 {} //token ya existe en adac, no hay que declararlo
 {
 	try {
-  cabecera_funcion() declaracion_variables() bloque_sentencias()
+  cabecera_funcion() declaracion_variables() bloque_sentencias()  //TODO ACABAR EN CSF PARA DEVOLVER EL PC A DONDE ESTABA
     {tabla_simbolos.removeBlock();
      if(!hay_return){
         ErrorSemantico.deteccion("Las funciones tienen que terminar con un return",token);
@@ -356,11 +358,13 @@ SymbolFunction simbolo_funcion;}
 {
   try {
   <tFUNCTION> tipo_func = tipo_variables() t = <tID>
-    {tipo_funcion = tipo_func;
+    {   tipo_funcion = tipo_func;
 
-    simbolo_funcion = new SymbolFunction(t.image, parametros_formales, tipo_func);
-    tabla_simbolos.insertSymbol(simbolo_funcion);
-    tabla_simbolos.insertBlock();
+        simbolo_funcion = new SymbolFunction(t.image, parametros_formales, tipo_func);
+        if(simbolo_funcion != null){
+            tabla_simbolos.insertSymbol(simbolo_funcion);
+            tabla_simbolos.insertBlock();
+        }
     }
   parametros_formales(simbolo_funcion) <tIS>
    }catch(ParseException e) {
@@ -374,7 +378,8 @@ SymbolFunction simbolo_funcion;}
 void declaracion_proc() :
 {}
 { try{
-  cabecera_proc() declaracion_variables() bloque_sentencias() {tabla_simbolos.removeBlock();}
+  cabecera_proc() declaracion_variables() bloque_sentencias()
+  {tabla_simbolos.removeBlock();} //TODO ACABAR EN CSF PARA DEVOLVER EL PC A DONDE ESTABA
    }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -388,8 +393,11 @@ SymbolProcedure simbolo_procedure;}
 { try{
   <tPROCEDURE> t = <tID>
   {simbolo_procedure = new SymbolProcedure(t.image, parm_list);
-  tabla_simbolos.insertSymbol(simbolo_procedure);
-  tabla_simbolos.insertBlock();}
+    if(simbolo_procedure != null){
+        tabla_simbolos.insertSymbol(simbolo_procedure);
+        tabla_simbolos.insertBlock();
+    }
+  }
   parametros_formales(simbolo_procedure) <tIS>
    }catch(ParseException e) {
 	errorSintactico(e);
@@ -498,7 +506,6 @@ void sentencia() :
 	| escribir_linea() <tPC>
 	| LOOKAHEAD(2) invocacion_procedimiento()
 	| LOOKAHEAD(2) asignacion() <tPC>
-	| declaracion_accion() <tPC>
 	| seleccion()
 	| mientras_que()
 	| t=<tRETURN> atr = expresion() <tPC> {
@@ -510,7 +517,7 @@ void sentencia() :
 	    }else{
 	        ErrorSemantico.deteccion("La instruccion return solo se puede usar en funciones",t);
 	    }
-	}
+	} //TODO DEVOLVER EL VALOR ESPERADO APILANDOLO EN LA PILA
 	}catch(ParseException e) {
 	  panic_mode(tPC);
 	  errorSintactico(e);
@@ -724,7 +731,12 @@ void invocacion_procedimiento() : /*IMPORTANTE TIENE QUE SER PROCEDIMIENTO EN EL
     }catch(SymbolNotFoundException e){
         ErrorSemantico.deteccion(e, t);
     }
-	  	} argumentos(simbolo_proc,t) <tPC>
+	  	} argumentos(simbolo_proc,t) <tPC> //TODO PARA LOS ARGUMENTOS, SI EL PARAMETRO DE LA ACCION PIDE UNA REFERENCIA BORRAR DRF
+	  	                                 //TODO PARA LOS PARAMETROS POR VALOR YA SE APILARIA BIEN
+	  	                                 //TODO DESPUES DE APILAR LOS VALORES OSF
+	  	                                 //TODO OSF 4 0 1 <- donde se encuentra en el PC la primera instrucción de la función
+                                         //4 -> tamaño del bloque que invoca el procedimiento, 0 1 2 y 3 están ocupadas por el
+                                         //0 -> cuantas componentes del display hay que ocultar
 	  }catch(ParseException e) {
 		  panic_mode(tPC);
 		  errorSintactico(e);
@@ -939,7 +951,9 @@ Attributes funcion_o_vector(Token t) :
 }
 {
   try{  //TODO CASO DE FUNCION, NO NOS METERMOS AUN CON LO QUE SE ESCRIBE EN EL CODIGO
-  <tAP> {atr=null;}(atr= lista_uno_o_mas_exps(simbolo_del_factor, t) )? <tCP> {
+  <tAP> {atr=null;}(atr= lista_uno_o_mas_exps(simbolo_del_factor, t) )? <tCP> { //TODO PARA LOS ARGUMENTOS, SI EL PARAMETRO DE LA ACCION PIDE UNA REFERENCIA BORRAR EL DRF
+                                                                            //TODO PARA LOS PARAMETROS POR VALOR YA SE APILARIA BIEN
+                                                                            //TODO DESPUES DE APILAR LOS VALORES OSF
     if(atr==null)
         SemanticFunctions.comprobaciones_para_acciones_sin_parametros(simbolo_del_factor,t);
     atr = new Attributes(); atr.returnType_al_tipo(simbolo_del_factor);

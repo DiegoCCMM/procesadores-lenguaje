@@ -89,7 +89,9 @@ public class Generator {
 
 
 }
-
+    /*
+     *  Se espera un string con el texto deseado y un caracter al principio y al final
+     */
     private void escribe_string_por_pantalla(String atr) {
         int unicode_del_caracter;
         codigo_maquina.addComment("escribimos por pantalla: " + atr);

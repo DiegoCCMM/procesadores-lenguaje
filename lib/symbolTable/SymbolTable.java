@@ -80,15 +80,16 @@ public class SymbolTable {
         HashMap<String, Symbol> currentBlock = st.get(st.size()-1);
         if (currentBlock.containsKey(s.name)) { // ya está
             throw new AlreadyDefinedSymbolException(s.name);
-        } else {
-            int nivel_actual = direcciones_de_los_bloques.size() - 1;
+        } else {System.out.println("Hello");
+            int nivel_actual = level;
             int direccion_post_reserva_del_simbolo =
                     direcciones_de_los_bloques.get(nivel_actual) + el_tamanyo_del_simbolo(s);
-
+            System.out.println("im");
             s.nivel = level;
             s.dir = direcciones_de_los_bloques.get(nivel_actual);
             direcciones_de_los_bloques.set(nivel_actual, direccion_post_reserva_del_simbolo);
             currentBlock.put(s.name, s);
+            System.out.println("father");
         }
     }
 
