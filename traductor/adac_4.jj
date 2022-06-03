@@ -22,8 +22,8 @@ public class adac_4 {
    static SymbolTable tabla_simbolos = new SymbolTable();
    static SemanticFunctions SemFunc = new SemanticFunctions();
    static ErrorSemantico ErrorSemantico = new ErrorSemantico();
-   static Symbol.Types tipo_funcion = null;
-   static boolean hay_return = false;
+   static LinkedList<Symbol.Types> tipo_funcion = new LinkedList<Symbol.Types>();
+   static LinkedList <Boolean> hay_return = new LinkedList<Boolean>();
    static boolean errores_sintactico= false;
    static Generator generador_codigo = new Generator(tabla_simbolos);
 
@@ -223,7 +223,7 @@ void declaracion_variables():
 {}
 {
    try {
-     ( declaracion() <tPC> )* //TODO: declaracion acciones anidada
+     ( declaracion() <tPC> )*
  }catch(ParseException e) {
 	panic_mode(tPC);
 	errorSintactico(e);
@@ -236,7 +236,6 @@ void declaracion():
 {
   try {
   	tipo_variable = tipo_variables() lista_vars(tipo_variable)
-  //	| declaracion_accion() //TODO: revisar
  }catch(ParseException e) {
 	errorSintactico(e);
  }
@@ -324,7 +323,6 @@ void declaracion_accion() :
 {String tag = CGUtils.newLabel();
 generador_codigo.codigo_maquina.addLabel(tag);}
 {
-                                            //TODO CREAR UNA LABEL CON EL CGUtils Y RECORDARLA para las invocaciones
   try {
   declaracion_funcion(tag) | declaracion_proc(tag)
 
@@ -336,17 +334,26 @@ generador_codigo.codigo_maquina.addLabel(tag);}
 
 /*declaracion_funcion ::= cabecera_funcion declaracion_variables bloque_sentencias*/
 void declaracion_funcion(String tag) :
-{} //token ya existe en adac, no hay que declararlo
+{String tag2; int tamanyo_inicial = 0;} //token ya existe en adac, no hay que declararlo
 {
 	try {
-  cabecera_funcion(tag) declaracion_variables() bloque_sentencias()
+  cabecera_funcion(tag) declaracion_variables()
+  ( {tag2 = CGUtils.newLabel(); generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.JMP, tag2);}
+    declaracion_accion()
+    {generador_codigo.codigo_maquina.addLabel(tag2);}
+  )?
+  {hay_return.push(true);
+  tamanyo_inicial = hay_return.size();
+  }
+  bloque_sentencias()
     {generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.CSF);
     tabla_simbolos.removeBlock();
-     if(!hay_return){
+     if(hay_return.size() == tamanyo_inicial){
         ErrorSemantico.deteccion("Las funciones tienen que terminar con un return",token);
+        hay_return.pop();
+        tipo_funcion.pop();
      }
-     tipo_funcion = null;
-     hay_return = false;
+
     }
    }catch(ParseException e) {
 	errorSintactico(e);
@@ -362,9 +369,9 @@ SymbolFunction simbolo_funcion;}
 {
   try {
   <tFUNCTION> tipo_func = tipo_variables() t = <tID>
-    {   tipo_funcion = tipo_func;
+    {   tipo_funcion.push(tipo_func);
 
-        simbolo_funcion = new SymbolFunction(t.image, parametros_formales, tipo_func,tag);
+        simbolo_funcion = new SymbolFunction(t.image, parametros_formales, tipo_func, tag);
         if(simbolo_funcion != null){
             tabla_simbolos.insertSymbol(simbolo_funcion);
             tabla_simbolos.insertBlock();
@@ -382,9 +389,15 @@ SymbolFunction simbolo_funcion;}
 
 /*declaracion_proc ::= cabecera_proc declaracion_variables bloque_sentencias*/
 void declaracion_proc(String tag) :
-{}
+{String tag2;}
 { try{
-  cabecera_proc(tag) declaracion_variables() bloque_sentencias()
+  cabecera_proc(tag) declaracion_variables()
+  (
+    {tag2 = CGUtils.newLabel(); generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.JMP, tag2);}
+    declaracion_accion()
+    {generador_codigo.codigo_maquina.addLabel(tag2);}
+  )?
+  bloque_sentencias()
   {generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.CSF);
   tabla_simbolos.removeBlock();}
    }catch(ParseException e) {
@@ -517,15 +530,16 @@ void sentencia() :
 	| seleccion()
 	| mientras_que()
 	| t=<tRETURN> atr = expresion() <tPC> {
-	    if(tipo_funcion != null){
-	        if(atr.type != tipo_funcion){
+	    if(!tipo_funcion.isEmpty()){
+	        if(atr.type != tipo_funcion.pop()){
 	            ErrorSemantico.deteccion("El tipo obtenido no coincide con la declaracion de la funcion",t);
 	        }
-	        hay_return = true;
+	        hay_return.pop();
+
 	    }else{
 	        ErrorSemantico.deteccion("La instruccion return solo se puede usar en funciones",t);
 	    }
-	} //TODO DEVOLVER EL VALOR ESPERADO APILANDOLO EN LA PILA
+	} //la propia expresion cargará el valor
 	}catch(ParseException e) {
 	  panic_mode(tPC);
 	  errorSintactico(e);
@@ -678,7 +692,6 @@ void lista_escribiblesRec() :
 void asignacion() :
 {Attributes atr_v=null, atr_e=null; Token t;}
 { try{
-    //TODO SI EL ID de var asignacion NO SE ENCUENTRA EN LA TABLA DE SIMBOLOS SE CREA UNDEFINED O SE CREA CON EL TIPO ESPERADO DEL ATRIBUTO
   atr_v=var_asignacion() t=<tOPAS> atr_e =expresion() { //Se utiliza el token de tOPAS para la info de los errores semanticos
       atr_v.comprobacion_asignacion(atr_e,t);
       generador_codigo.asignacion(atr_v);
@@ -739,12 +752,13 @@ void invocacion_procedimiento() : /*IMPORTANTE TIENE QUE SER PROCEDIMIENTO EN EL
     }catch(SymbolNotFoundException e){
         ErrorSemantico.deteccion(e, t);
     }
-	  	} argumentos(simbolo_proc,t) <tPC>  //TODO DESPUES DE APILAR LOS VALORES OSF
-	  	                                 //TODO OSF 4 0 1 <- donde se encuentra en el PC la primera instrucción de la función
-                                         //4 -> tamaño del bloque que invoca el procedimiento, 0 1 2 y 3 están ocupadas por el
-                                         //0 -> cuantas componentes del display hay que ocultar
-      { generador_codigo.codigo_maquina.addOSFInst(tabla_simbolos.direcciones_de_los_bloques.get(tabla_simbolos.level),
-      tabla_simbolos.level- simbolo_proc.nivel,((SymbolProcedure) simbolo_proc).tag);}
+	  	} argumentos(simbolo_proc,t) <tPC>
+      {
+        if(simbolo_proc != null){
+            generador_codigo.codigo_maquina.addOSFInst(tabla_simbolos.direcciones_de_los_bloques.get(tabla_simbolos.level),
+            tabla_simbolos.level- simbolo_proc.nivel,((SymbolProcedure) simbolo_proc).tag);
+        }
+      }
 	  }catch(ParseException e) {
 		  panic_mode(tPC);
 		  errorSintactico(e);

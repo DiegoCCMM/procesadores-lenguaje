@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.io.FileDescriptor;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.LinkedList;
 
 public class Generator {
     public CodeBlock codigo_maquina;
@@ -44,11 +45,14 @@ public class Generator {
     //Se supone que el valor a asignar ya esta en la pila --> valor variable --> ASGI
     public void asignacion(Attributes atr_v){
         codigo_maquina.addComment("Asignacion");
-        if(atr_v.referencia_simbolo.type != Symbol.Types.ARRAY){
-            apila_direccion_simbolo(atr_v.referencia_simbolo);
-            codigo_maquina.addInst(PCodeInstruction.OpCode.ASGI);
-        }else{
-            codigo_maquina.addInst(PCodeInstruction.OpCode.ASG);
+        Symbol simbolo = atr_v.referencia_simbolo;
+        if(simbolo != null) {
+            if (simbolo.type != Symbol.Types.ARRAY) {
+                apila_direccion_simbolo(atr_v.referencia_simbolo);
+                codigo_maquina.addInst(PCodeInstruction.OpCode.ASGI);
+            } else {
+                codigo_maquina.addInst(PCodeInstruction.OpCode.ASG);
+            }
         }
     }
 

@@ -176,6 +176,10 @@ public class Attributes implements Cloneable {
         }else if(this.type != sim.type){
             ErrorSemantico.deteccion("No se pueden asignar tipos distintos",t);
         }
+
+        if(this.referencia_simbolo == null && this.type == null){
+            this.type = Symbol.Types.UNDEFINED;
+        }
     }
 
 
