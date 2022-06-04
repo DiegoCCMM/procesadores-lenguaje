@@ -22,8 +22,9 @@ public class adac_4 {
    static SymbolTable tabla_simbolos = new SymbolTable();
    static SemanticFunctions SemFunc = new SemanticFunctions();
    static ErrorSemantico ErrorSemantico = new ErrorSemantico();
-   static LinkedList<Symbol.Types> tipo_funcion = new LinkedList<Symbol.Types>();
-   static LinkedList <Boolean> hay_return = new LinkedList<Boolean>();
+   static boolean seHaLeidoUnReturn = false;
+   //static LinkedList<Symbol.Types> tipo_funcion = new LinkedList<Symbol.Types>();
+   //static LinkedList <Boolean> hay_return = new LinkedList<Boolean>();
    static boolean errores_sintactico= false;
    static Generator generador_codigo = new Generator(tabla_simbolos);
 
@@ -210,11 +211,11 @@ TOKEN : /*Separadores*/
 
 /*programa ::= <tPROCEDURE> <tID> <tIS> declaracion_variables declaracion_acciones bloque_sentencias <EOF> */
 void programa():
-{String tag_main = CGUtils.newLabel();}
+{String tag_main = CGUtils.newLabel(); Symbol.Types tipo_funcion = Symbol.Types.UNDEFINED;}
 {
   <tPROCEDURE> <tID> <tIS> {generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.ENP, tag_main);}
   declaracion_variables() declaracion_acciones() {generador_codigo.codigo_maquina.addLabel(tag_main);}
-  bloque_sentencias() <EOF> {generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.LVP);}
+  bloque_sentencias(tipo_funcion) <EOF> {generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.LVP);}
 }
 
 /***DECLARACION DE VARIABLES***/
@@ -334,25 +335,28 @@ generador_codigo.codigo_maquina.addLabel(tag);}
 
 /*declaracion_funcion ::= cabecera_funcion declaracion_variables bloque_sentencias*/
 void declaracion_funcion(String tag) :
-{String tag2; int tamanyo_inicial = 0;} //token ya existe en adac, no hay que declararlo
+{String tag2; Symbol.Types return_type = Symbol.Types.UNDEFINED;} //token ya existe en adac, no hay que declararlo
 {
 	try {
-  cabecera_funcion(tag) declaracion_variables()
+  return_type = cabecera_funcion(tag) declaracion_variables()
   ( {tag2 = CGUtils.newLabel(); generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.JMP, tag2);}
     declaracion_accion()
     {generador_codigo.codigo_maquina.addLabel(tag2);}
   )?
-  {hay_return.push(true);
-  tamanyo_inicial = hay_return.size();
-  }
-  bloque_sentencias()
+  //{hay_return.push(true);
+  //tamanyo_inicial = hay_return.size();
+  //}
+  bloque_sentencias(return_type)
     {generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.CSF);
     tabla_simbolos.removeBlock();
-     if(hay_return.size() == tamanyo_inicial){
+     //if(hay_return.size() == tamanyo_inicial){
+     if(!seHaLeidoUnReturn){
         ErrorSemantico.deteccion("Las funciones tienen que terminar con un return",token);
-        hay_return.pop();
-        tipo_funcion.pop();
      }
+     seHaLeidoUnReturn = false;
+        //hay_return.pop();
+        //tipo_funcion.pop();
+     //}
 
     }
    }catch(ParseException e) {
@@ -361,16 +365,15 @@ void declaracion_funcion(String tag) :
 }
 
 /*cabecera_funcion ::= <tFUNCTION> tipo_variables <tID> parametros_formales <tIS>*/
-void cabecera_funcion(String tag) :
+Symbol.Types cabecera_funcion(String tag) :
 {Token t = null;
 ArrayList<Symbol> parametros_formales = new ArrayList<Symbol>();
-Symbol.Types tipo_func;
+Symbol.Types tipo_func = Symbol.Types.UNDEFINED;
 SymbolFunction simbolo_funcion;}
 {
   try {
   <tFUNCTION> tipo_func = tipo_variables() t = <tID>
-    {   tipo_funcion.push(tipo_func);
-
+    {   //tipo_funcion.push(tipo_func);
         simbolo_funcion = new SymbolFunction(t.image, parametros_formales, tipo_func, tag);
         if(simbolo_funcion != null){
             tabla_simbolos.insertSymbol(simbolo_funcion);
@@ -379,17 +382,20 @@ SymbolFunction simbolo_funcion;}
 
     }
   parametros_formales(simbolo_funcion) <tIS>
-  {generador_codigo.asignar_parametros(parametros_formales);}
+  {
+    generador_codigo.asignar_parametros(parametros_formales);
+
+  }
    }catch(ParseException e) {
 	errorSintactico(e);
    }catch(AlreadyDefinedSymbolException e){
     ErrorSemantico.deteccion(e, t);
-   }
+   }finally{return(tipo_func);}
 }
 
 /*declaracion_proc ::= cabecera_proc declaracion_variables bloque_sentencias*/
 void declaracion_proc(String tag) :
-{String tag2;}
+{String tag2; Symbol.Types return_type = Symbol.Types.UNDEFINED;}
 { try{
   cabecera_proc(tag) declaracion_variables()
   (
@@ -397,7 +403,7 @@ void declaracion_proc(String tag) :
     declaracion_accion()
     {generador_codigo.codigo_maquina.addLabel(tag2);}
   )?
-  bloque_sentencias()
+  bloque_sentencias(return_type)
   {generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.CSF);
   tabla_simbolos.removeBlock();}
    }catch(ParseException e) {
@@ -495,10 +501,10 @@ void parametro(Symbol.Types tipo_parametro, Symbol.ParameterClass clase_parametr
 /***BLOQUE SENTENCIAS**/
 
 /*bloque_sentencias ::= <tBEGIN> lista_sentencias <tEND>*/
-void bloque_sentencias() :
+void bloque_sentencias(Symbol.Types tipo_funcion) :
 {}
 { try{
-  <tBEGIN> lista_sentencias() <tEND>
+  <tBEGIN> lista_sentencias(tipo_funcion) <tEND>
    }catch(ParseException e) {
      panic_mode(tEND);
 	errorSintactico(e);
@@ -506,10 +512,10 @@ void bloque_sentencias() :
 }
 
 /*lista_sentencias ::= sentencia**/
-void lista_sentencias() :
+void lista_sentencias(Symbol.Types tipo_funcion) :
 {}
 { try{
-  (sentencia())+ //una o mas sentencias
+  (sentencia(tipo_funcion))+ //una o mas sentencias
   |  {}
    }catch(ParseException e) {
 	errorSintactico(e);
@@ -517,7 +523,7 @@ void lista_sentencias() :
 }
 
 /*lista_sentencias ::= sentencia**/
-void sentencia() :
+void sentencia(Symbol.Types tipo_funcion) :
 {Attributes atr; Token t;}
 {
   try {
@@ -527,15 +533,15 @@ void sentencia() :
 	| escribir_linea() <tPC>
 	| LOOKAHEAD(2) invocacion_procedimiento()
 	| LOOKAHEAD(2) asignacion() <tPC>
-	| seleccion()
-	| mientras_que()
+	| seleccion(tipo_funcion)
+	| mientras_que(tipo_funcion)
 	| t=<tRETURN> atr = expresion() <tPC> {
-	    if(!tipo_funcion.isEmpty()){
-	        if(atr.type != tipo_funcion.pop()){
+	    if(tipo_funcion != Symbol.Types.UNDEFINED){
+	        if(atr.type != tipo_funcion){
 	            ErrorSemantico.deteccion("El tipo obtenido no coincide con la declaracion de la funcion",t);
 	        }
-	        hay_return.pop();
-
+	        //hay_return.pop();
+	        seHaLeidoUnReturn = true;
 	    }else{
 	        ErrorSemantico.deteccion("La instruccion return solo se puede usar en funciones",t);
 	    }
@@ -789,7 +795,7 @@ void argumentos(Symbol simbolo_proc, Token t) :
 //}
 
 /*seleccion ::= <tIF> expresion <tTHEN> lista_sentencias (<tELSE> lista_sentencias)? <tEND>*/
-void seleccion() :
+void seleccion(Symbol.Types tipo_funcion) :
 {Attributes atr_e=null;
 String etiq_FIN,etiq_ELSE; }
 {
@@ -799,10 +805,10 @@ String etiq_FIN,etiq_ELSE; }
 	   etiq_ELSE = CGUtils.newLabel();
 	   etiq_FIN = CGUtils.newLabel();
 	   generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.JMF, etiq_ELSE);
-	   }<tTHEN> lista_sentencias() {generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.JMP, etiq_FIN);}
+	   }<tTHEN> lista_sentencias(tipo_funcion) {generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.JMP, etiq_FIN);}
 	    {generador_codigo.codigo_maquina.addLabel(etiq_ELSE);}
 	  (
-	    <tELSE> lista_sentencias()
+	    <tELSE> lista_sentencias(tipo_funcion)
 	  )?
 	  <tEND> {generador_codigo.codigo_maquina.addLabel(etiq_FIN);}
 	}catch(ParseException e) {
@@ -812,7 +818,7 @@ String etiq_FIN,etiq_ELSE; }
 }
 
 /*mientras_que ::= <tWHILE> expresion <tDO> lista_sentencias <tEND>*/
-void mientras_que() :
+void mientras_que(Symbol.Types tipo_funcion) :
 {Attributes atr_e=null; String etiq_WHILE, etiq_FIN;}
 {
   try {
@@ -823,7 +829,7 @@ void mientras_que() :
   	generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.JMF, etiq_FIN);
 
 
-  	} <tDO> lista_sentencias(){generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.JMP, etiq_WHILE);}
+  	} <tDO> lista_sentencias(tipo_funcion){generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.JMP, etiq_WHILE);}
   	<tEND>{generador_codigo.codigo_maquina.addLabel(etiq_FIN);}
   }catch(ParseException e) {
 	  panic_mode(tEND);
