@@ -170,13 +170,13 @@ public class Attributes implements Cloneable {
     /* Comprobacion del tipo y si es asignable (this es el atributo de la izda de la asignacion) */
     public void comprobacion_asignacion(Attributes sim,Token t){
         //System.err.println("Atributo asignacion: "+ this.toString());
-
-        if(this.type == Symbol.Types.ARRAY){
-            ErrorSemantico.deteccion("No se puede asignar a vectores",t);
-        }else if(this.type != sim.type){
-            ErrorSemantico.deteccion("No se pueden asignar tipos distintos",t);
+        if(sim != null) {
+            if (this.type == Symbol.Types.ARRAY) {
+                ErrorSemantico.deteccion("No se puede asignar a vectores", t);
+            } else if (this.type != sim.type) {
+                ErrorSemantico.deteccion("No se pueden asignar tipos distintos", t);
+            }
         }
-
         if(this.referencia_simbolo == null && this.type == null){
             this.type = Symbol.Types.UNDEFINED;
         }

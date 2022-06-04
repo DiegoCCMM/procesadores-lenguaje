@@ -973,6 +973,7 @@ Attributes funcion_o_vector(Token t) :
  Symbol simbolo_del_factor = null;
     try{
         simbolo_del_factor = tabla_simbolos.getSymbol(t.image);
+        if (simbolo_del_factor instanceof SymbolProcedure) ErrorSemantico.deteccion("NO SE PUEDEN ASIGNAR PROCEDIMIENTOS",t);
     }catch(SymbolNotFoundException e){
         ErrorSemantico.deteccion(e, t);
     }
