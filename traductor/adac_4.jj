@@ -949,6 +949,7 @@ Attributes factor() :
   try{
   <tNOT> atr_f = factor(){
        atr_f.comprobacion_tipo(Symbol.Types.BOOL,token);
+       generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.NGB);
   }
 | <tAP> atr_f = expresion() <tCP>
 | <tINT2CHAR> <tAP> atr_e =expresion() <tCP> {
