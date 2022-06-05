@@ -1030,13 +1030,20 @@ Attributes lista_uno_o_mas_exps(Symbol simbolo_de_la_accion, Token t) :
 {
   try{
   atr = expresion()
-    { atr.es_parametro_de_accion(simbolo_funcion, simbolo_procedimiento, indice_parametro,t);
-    generador_codigo.eliminarDRF(simbolo_funcion, simbolo_procedimiento, indice_parametro);
+    {
+    if(atr != null){
+              atr.es_parametro_de_accion(simbolo_funcion, simbolo_procedimiento, indice_parametro,t);
+              generador_codigo.eliminarDRF(simbolo_funcion, simbolo_procedimiento, indice_parametro);
+              generador_codigo.apilarValorVector(simbolo_funcion, simbolo_procedimiento, indice_parametro, atr);
+      }
     indice_parametro++;}
   (<tCOMA> atr = expresion()
    {
-    atr.es_parametro_de_accion(simbolo_funcion, simbolo_procedimiento, indice_parametro,t);
-    generador_codigo.eliminarDRF(simbolo_funcion, simbolo_procedimiento, indice_parametro);
+    if(atr != null){
+              atr.es_parametro_de_accion(simbolo_funcion, simbolo_procedimiento, indice_parametro,t);
+              generador_codigo.eliminarDRF(simbolo_funcion, simbolo_procedimiento, indice_parametro);
+              generador_codigo.apilarValorVector(simbolo_funcion, simbolo_procedimiento, indice_parametro, atr);
+      }
     indice_parametro++;}
   )*{
      SemanticFunctions.comprobacion_numero_argumentos(simbolo_funcion, simbolo_procedimiento, indice_parametro,t);

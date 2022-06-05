@@ -240,6 +240,27 @@ public class Generator {
         }
     }
 
+    public void apilarValorVector(SymbolFunction simbolo_funcion, SymbolProcedure simbolo_procedimiento, int indice_parametro, Attributes atr_expr){
+        if( simbolo_funcion != null && simbolo_funcion.parList.get(indice_parametro).parClass == Symbol.ParameterClass.VAL
+        && atr_expr.referencia_simbolo.type == Symbol.Types.ARRAY)
+            apilarValorVector2((SymbolArray) atr_expr.referencia_simbolo);
+        if(simbolo_procedimiento != null && simbolo_procedimiento.parList.get(indice_parametro).parClass == Symbol.ParameterClass.VAL
+                && atr_expr.referencia_simbolo.type == Symbol.Types.ARRAY)
+            apilarValorVector2((SymbolArray) atr_expr.referencia_simbolo);
+    }
+    /*
+     * la componente vector[0] ya está apilada por la expresion
+     */
+    private void apilarValorVector2(SymbolArray simbolo_array) {
+        codigo_maquina.addComment("apilado especial por valor");
+        int nivel_del_simbolo = tabla_simbolo.level - simbolo_array.nivel;
+        for(int i = 1; i <= simbolo_array.maxInd; i++) {
+            codigo_maquina.addInst(PCodeInstruction.OpCode.SRF, nivel_del_simbolo, ((int) simbolo_array.dir) + i);
+            codigo_maquina.addInst(PCodeInstruction.OpCode.DRF);
+        }
+    }
+
+
     public void eliminarDRF(SymbolFunction simbolo_funcion, SymbolProcedure simbolo_procedimiento, int indice_parametro){
         if( simbolo_funcion != null && simbolo_funcion.parList.get(indice_parametro).parClass ==  Symbol.ParameterClass.REF)
                  codigo_maquina.code.remove(codigo_maquina.code.size()-1);
@@ -249,7 +270,21 @@ public class Generator {
 
     public void asignar_parametros(ArrayList<Symbol> parametros_formales){
         for (int i= parametros_formales.size()-1; i>=0; i--){
-            SRF_del_simbolo(parametros_formales.get(i));
+            if(parametros_formales.get(i).type == Symbol.Types.ARRAY &&
+                    parametros_formales.get(i).parClass == Symbol.ParameterClass.VAL)
+            {
+                desapilar_vector_valor((SymbolArray)parametros_formales.get(i));
+            }else {
+                SRF_del_simbolo(parametros_formales.get(i));
+                codigo_maquina.addInst(PCodeInstruction.OpCode.ASGI);
+            }
+        }
+    }
+
+    private void desapilar_vector_valor(SymbolArray symbolArray) {
+        int nivel_del_simbolo = tabla_simbolo.level - symbolArray.nivel;
+        for(int i = symbolArray.maxInd; i >= 0; i--) {
+            codigo_maquina.addInst(PCodeInstruction.OpCode.SRF, nivel_del_simbolo, ((int) symbolArray.dir) + i);
             codigo_maquina.addInst(PCodeInstruction.OpCode.ASGI);
         }
     }
