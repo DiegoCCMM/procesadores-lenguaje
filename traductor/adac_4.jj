@@ -876,13 +876,18 @@ try{
 
 /* expresion_simple : ( <tSUMA> | <tRESTA> )? termino ( operador_aditivo termino )* */
 Attributes expresion_simple() :
-{Attributes atr_f1=null,atr_f2=null;
+{Attributes atr_f1=null,atr_f2=null; Token t=null;
 boolean positivo_negativo = false;
 PCodeInstruction.OpCode operador;}
 {
   try{
-    (<tSUMA> {positivo_negativo = true;} | <tRESTA> {positivo_negativo = true;} )?
-    atr_f1=termino() {  if(positivo_negativo) atr_f1.comprobacion_tipo(Symbol.Types.INT,token); }
+    (t=<tSUMA> {positivo_negativo = true;} | t=<tRESTA> {positivo_negativo = true;} )?
+    atr_f1=termino() {  if(positivo_negativo) {
+      atr_f1.comprobacion_tipo(Symbol.Types.INT,token);
+      if(t.image.equals("-")) generador_codigo.codigo_maquina.addInst(PCodeInstruction.OpCode.NGI);
+    }
+
+    }
     (operador = operador_aditivo() atr_f2 =termino()
         {Attributes.comprobacion_tipo(atr_f1,atr_f2,operador == PCodeInstruction.OpCode.OR,token);
          generador_codigo.escribo_operador(operador);
