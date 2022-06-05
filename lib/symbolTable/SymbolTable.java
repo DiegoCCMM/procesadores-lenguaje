@@ -86,7 +86,9 @@ public class SymbolTable {
                     direcciones_de_los_bloques.get(nivel_actual) + el_tamanyo_del_simbolo(s);
             s.nivel = level;
             s.dir = direcciones_de_los_bloques.get(nivel_actual);
-            direcciones_de_los_bloques.set(nivel_actual, direccion_post_reserva_del_simbolo);
+            if(!(s instanceof SymbolFunction || s instanceof SymbolProcedure)){
+                direcciones_de_los_bloques.set(nivel_actual, direccion_post_reserva_del_simbolo);
+            }
             currentBlock.put(s.name, s);
         }
     }

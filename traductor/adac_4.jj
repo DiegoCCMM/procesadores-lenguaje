@@ -374,6 +374,7 @@ SymbolFunction simbolo_funcion;}
   try {
   <tFUNCTION> tipo_func = tipo_variables() t = <tID>
     {   //tipo_funcion.push(tipo_func);
+            generador_codigo.codigo_maquina.addComment("FUNCION "  +t.image);
         simbolo_funcion = new SymbolFunction(t.image, parametros_formales, tipo_func, tag);
         if(simbolo_funcion != null){
             tabla_simbolos.insertSymbol(simbolo_funcion);
@@ -761,6 +762,8 @@ void invocacion_procedimiento() : /*IMPORTANTE TIENE QUE SER PROCEDIMIENTO EN EL
 	  	} argumentos(simbolo_proc,t) <tPC>
       {
         if(simbolo_proc != null){
+
+
             generador_codigo.codigo_maquina.addOSFInst(tabla_simbolos.direcciones_de_los_bloques.get(tabla_simbolos.level),
             tabla_simbolos.level- simbolo_proc.nivel,((SymbolProcedure) simbolo_proc).tag);
         }
