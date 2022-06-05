@@ -255,8 +255,17 @@ public class Generator {
         codigo_maquina.addComment("apilado especial por valor");
         int nivel_del_simbolo = tabla_simbolo.level - simbolo_array.nivel;
         for(int i = 1; i <= simbolo_array.maxInd; i++) {
-            codigo_maquina.addInst(PCodeInstruction.OpCode.SRF, nivel_del_simbolo, ((int) simbolo_array.dir) + i);
-            codigo_maquina.addInst(PCodeInstruction.OpCode.DRF);
+            if(simbolo_array.parClass== Symbol.ParameterClass.REF){
+                codigo_maquina.addInst(PCodeInstruction.OpCode.SRF, nivel_del_simbolo, ((int) simbolo_array.dir)); //@@v
+                codigo_maquina.addInst(PCodeInstruction.OpCode.DRF);//@v
+                codigo_maquina.addInst(PCodeInstruction.OpCode.STC,i);//Calcular direccion
+                codigo_maquina.addInst(PCodeInstruction.OpCode.PLUS);
+                codigo_maquina.addInst(PCodeInstruction.OpCode.DRF);//v[i]
+            } else {
+                codigo_maquina.addInst(PCodeInstruction.OpCode.SRF, nivel_del_simbolo, ((int) simbolo_array.dir) + i);
+                codigo_maquina.addInst(PCodeInstruction.OpCode.DRF);
+            }
+
         }
     }
 
