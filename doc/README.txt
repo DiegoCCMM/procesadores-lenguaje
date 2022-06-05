@@ -55,3 +55,41 @@ LLamada a acciones
   - El número de parametros tiene que ser correcto
 Vectores
   - La expresion utilizada para indexar tiene que ser de tipo entero
+
+
+****************************************************************************
+Práctica 4: Construcción del generador de codigo para "adac"
+****************************************************************************
+- Clase Generator, en la que se han implementado las funciones para generar el codigo, reduciendo el codigo en
+adac_4.jj y haciendolo más legible
+- Comprobacion int2char, si el valor no esta entre 0 y 255 se lanza un error de ejecución
+- Error en ejecucion si el indice del vector se pasa de sus límites (minInd, maxInd)
+- Restricciones de nivel 4: El lenguaje permite el uso de parámetros escalares y de vectores, tanto por
+valor como por referencia en procedimientos y funciones.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -51,7 +51,9 @@ public class adac_4 {
       errorLexico(token);
     }
     catch(ParseException e) {
-		//errorSintactico(e);
+
+   }catch(NullPointerException e) {
+
    }
 //  System.out.println(tabla_simbolos.toString());
   if(errores_sintactico || ErrorSemantico. getContadorErrores() != 0)
@@ -228,7 +230,7 @@ void declaracion_variables():
  }catch(ParseException e) {
 	panic_mode(tPC);
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 /*declaracion ::= tipo_variables lista_vars */
@@ -239,7 +241,7 @@ void declaracion():
   	tipo_variable = tipo_variables() lista_vars(tipo_variable)
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 /*tipo_variables ::= ( <tINT> | <tCHAR> | <tBOOL> ) */
@@ -262,7 +264,7 @@ Symbol.Types tipo_variables():
 	 }catch(ParseException e) {
 	errorSintactico(e);
 	return Symbol.Types.UNDEFINED;
- }
+ }catch(NullPointerException e) {}
 }
  /*lista_vars := variable ( <tCOMA> variable )* */
  void lista_vars(Symbol.Types tipo_variable):
@@ -272,7 +274,7 @@ Symbol.Types tipo_variables():
    variable(tipo_variable) ( <tCOMA> variable(tipo_variable) )*
     }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
  }
 
  /*variable := <tID> declaracion_vector*/
@@ -290,7 +292,7 @@ Symbol.Types tipo_variables():
    }
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
  }
 
  /*declaracion_vector ::= <tAV> <tVALORENTERO> <tCV> | epsilon */
@@ -305,7 +307,7 @@ Symbol.Types tipo_variables():
   }catch(ParseException e) {
 	  errorSintactico(e);
 	  return 0;
- }
+ }catch(NullPointerException e) {}
 }
 
 /***DECLARACION DE ACCIONES****/
@@ -316,7 +318,7 @@ void declaracion_acciones() :
   (declaracion_accion())*
    }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 /*declaracion_accion ::= declaracion_funcion | declaracion_proc */
@@ -329,7 +331,7 @@ generador_codigo.codigo_maquina.addLabel(tag);}
 
    }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 
 }
 
@@ -361,7 +363,7 @@ void declaracion_funcion(String tag) :
     }
    }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 /*cabecera_funcion ::= <tFUNCTION> tipo_variables <tID> parametros_formales <tIS>*/
@@ -391,7 +393,8 @@ SymbolFunction simbolo_funcion;}
 	errorSintactico(e);
    }catch(AlreadyDefinedSymbolException e){
     ErrorSemantico.deteccion(e, t);
-   }finally{return(tipo_func);}
+   }catch(NullPointerException e) {}
+   finally{return(tipo_func);}
 }
 
 /*declaracion_proc ::= cabecera_proc declaracion_variables bloque_sentencias*/
@@ -409,7 +412,7 @@ void declaracion_proc(String tag) :
   tabla_simbolos.removeBlock();}
    }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 /*cabecera_proc ::= <tPROCEDURE> <tID> parametros_formales <tIS>*/
@@ -431,7 +434,7 @@ SymbolProcedure simbolo_procedure;}
 	errorSintactico(e);
    }catch(AlreadyDefinedSymbolException e){
         ErrorSemantico.deteccion(e, t);
-   }
+   }catch(NullPointerException e) {}
 }
 
 /*parametros_formales ::= <tAP> ( parametros ( <tPC> parametros )* )? <tCP> */
@@ -441,7 +444,7 @@ void parametros_formales(Symbol simbolo_funcion) :
   <tAP> (parametros(simbolo_funcion) (<tPC> parametros(simbolo_funcion) )* )? <tCP>
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 /*parametros ::= clase_parametros tipo_variables lista_parametros   */
@@ -455,7 +458,7 @@ void parametros(Symbol simbolo_funcion) :
 
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 Symbol.ParameterClass clase_parametros() :
@@ -465,7 +468,7 @@ Symbol.ParameterClass clase_parametros() :
 | <tREF> {return(Symbol.ParameterClass.REF);}
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 /*lista_parametros ::= parametro (, parametro)**/
@@ -476,7 +479,7 @@ void lista_parametros(Symbol.Types tipo_parametro, Symbol.ParameterClass clase_p
   /* lista_parametrosRec() */
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 /*parametro := <tID> parametro_vector*/
@@ -496,7 +499,7 @@ void parametro(Symbol.Types tipo_parametro, Symbol.ParameterClass clase_parametr
   }
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 /***BLOQUE SENTENCIAS**/
@@ -509,7 +512,7 @@ void bloque_sentencias(Symbol.Types tipo_funcion) :
    }catch(ParseException e) {
      panic_mode(tEND);
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 /*lista_sentencias ::= sentencia**/
@@ -520,7 +523,7 @@ void lista_sentencias(Symbol.Types tipo_funcion) :
   |  {}
    }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 /*lista_sentencias ::= sentencia**/
@@ -550,7 +553,7 @@ void sentencia(Symbol.Types tipo_funcion) :
 	}catch(ParseException e) {
 	  panic_mode(tPC);
 	  errorSintactico(e);
-	}
+	}catch(NullPointerException e) {}
 }
 
 void leer() :
@@ -559,7 +562,7 @@ void leer() :
   <tGET> <tAP> lista_asignables() <tCP>
  }catch(ParseException e) {
 	errorSintactico(e);
-}
+}catch(NullPointerException e) {}
 }
 
 /*lista_asignables() := (< tID >) lista_asignablesRec */
@@ -581,7 +584,7 @@ void lista_asignables() : //se puede sustituir por variable
    lista_asignablesRec()
    }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 /*lista_asignablesRec ::= (asignable_vector)* */
 void lista_asignablesRec() : //se puede sustituir por variable
@@ -603,7 +606,7 @@ void lista_asignablesRec() : //se puede sustituir por variable
   )*
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 /*asignable_vector ::= <tAV> expresion <tCV> */
 Attributes asignable_vector(Symbol sim_v, Token t_v) :
@@ -618,7 +621,8 @@ Attributes asignable_vector(Symbol sim_v, Token t_v) :
   }
  }catch(ParseException e) {
 	errorSintactico(e);
- }finally{
+ }catch(NullPointerException e) {}
+ finally{
   return atr;
  }
 }
@@ -630,7 +634,7 @@ void skip_linea() :
   <tSKIP_L> <tAP> <tCP> { generador_codigo.skip_line(); }
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 /*escribir ::= <tPUT> <tAP> lista_escribibles <tCP>*/
@@ -640,7 +644,7 @@ void escribir() :
   <tPUT> <tAP> lista_escribibles() <tCP>
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 /*escribir_linea ::= <tPUT_L> <tAP> lista_escribibles <tCP>*/
@@ -652,7 +656,7 @@ void escribir_linea() :
   /* Se podria sustituir cero_o_lista_escribibles por (lista_escribibles())* */
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 /*cero_o_lista_escribibles ::= lista_escribibles() | epsilon */
@@ -663,7 +667,7 @@ void cero_o_lista_escribibles() :
 	| {}
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 
 }
 
@@ -679,7 +683,7 @@ void lista_escribibles() : //1 o mÃ¡s escribibles
 
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 /* lista_escribiblesRec ::= (<tCOMA> (expresion | <tVALORCHAR> | <tVALORCADENA> ) )* */
@@ -692,7 +696,7 @@ void lista_escribiblesRec() :
   } )*
    }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 /*asignacion ::= var_asignacion <tOPAS> expresion*/
@@ -705,7 +709,7 @@ void asignacion() :
   }
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 /*var_asignacion ::= <tIDENTIFICADOR> var_Vector*/
@@ -716,7 +720,7 @@ Attributes atr;}
   t=<tID> atr=var_vector(token) { return atr;}
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 /*var_vector ::= <tAV> expresion <tCV> | epsilon */
@@ -743,7 +747,7 @@ Attributes var_vector(Token t) :
   {return atr;} /*epsilon*/
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 /*invocacion_procedimiento ::= <tID> argumentos <tPC> */
@@ -771,7 +775,7 @@ void invocacion_procedimiento() : /*IMPORTANTE TIENE QUE SER PROCEDIMIENTO EN EL
 	  }catch(ParseException e) {
 		  panic_mode(tPC);
 		  errorSintactico(e);
-	  }
+	  }catch(NullPointerException e) {}
 }
 /*argumentos ::= <tAP> ( lista_expresiones )? <tCP> */
 void argumentos(Symbol simbolo_proc, Token t) :
@@ -784,18 +788,9 @@ void argumentos(Symbol simbolo_proc, Token t) :
     }
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
-///*lista_expresiones ::= expresion (<tCOMA> expresion)* */
-//void lista_expresiones() :
-//{}
-//{ try{
-//  expresion() (<tCOMA> expresion())*
-// }catch(ParseException e) {
-//	errorSintactico(e);
-// }
-//}
 
 /*seleccion ::= <tIF> expresion <tTHEN> lista_sentencias (<tELSE> lista_sentencias)? <tEND>*/
 void seleccion(Symbol.Types tipo_funcion) :
@@ -817,7 +812,7 @@ String etiq_FIN,etiq_ELSE; }
 	}catch(ParseException e) {
 	  panic_mode(tEND);
 	  errorSintactico(e);
-	}
+	}catch(NullPointerException e) {}
 }
 
 /*mientras_que ::= <tWHILE> expresion <tDO> lista_sentencias <tEND>*/
@@ -837,7 +832,7 @@ void mientras_que(Symbol.Types tipo_funcion) :
   }catch(ParseException e) {
 	  panic_mode(tEND);
 	  errorSintactico(e);
-  }
+  }catch(NullPointerException e) {}
 }
 
 /*expresion := expresion_simple() (operador_relacional() expresion_simple())?*/
@@ -853,7 +848,8 @@ Attributes expresion() :
   })?
    }catch(ParseException e) {
 	errorSintactico(e);
- }finally{if(atr_e2 != null)return new Attributes(false);
+ }catch(NullPointerException e) {}
+ finally{if(atr_e2 != null)return new Attributes(false);
   else return atr_e1;}
 }
 
@@ -871,7 +867,7 @@ try{
 | <tNI> { return PCodeInstruction.OpCode.NEQ;}
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 /* expresion_simple : ( <tSUMA> | <tRESTA> )? termino ( operador_aditivo termino )* */
@@ -895,7 +891,8 @@ PCodeInstruction.OpCode operador;}
     )*
   }catch(ParseException e) {
 	  errorSintactico(e);
-  }finally{return atr_f1;}
+  }catch(NullPointerException e) {}
+  finally{return atr_f1;}
 }
 
 /* operador_aditivo :=  <tSUMA>| <tRESTA>| <tOR>*/
@@ -909,7 +906,7 @@ PCodeInstruction.OpCode operador_aditivo() :
 | <tOR> {return(PCodeInstruction.OpCode.OR);}
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
 }
 
 /*termino := factor ( operador_multiplicativo factor )* */
@@ -924,7 +921,8 @@ PCodeInstruction.OpCode operador;}
   })*
  }catch(ParseException e) {
 	errorSintactico(e);
- }finally{ return atr_f1;}
+ }catch(NullPointerException e) {}
+ finally{ return atr_f1;}
 }
 
 /*operador_multiplicativo :=  <tMUL>| <tMOD>| <tDIV>| <tAND>*/
@@ -938,7 +936,9 @@ PCodeInstruction.OpCode operador_multiplicativo() :
 | <tAND> {return PCodeInstruction.OpCode.AND;}
  }catch(ParseException e) {
 	errorSintactico(e);
- }
+ }catch(NullPointerException e) {}
+
+
 }
 
 /*factor := <tNOT> factor | <tAP> expresion <tCP> | <tINT2CHAR> <tAP> expresion <tCP> | <tCHAR2INT> <tAP> expresion <tCP>
@@ -971,6 +971,8 @@ Attributes factor() :
 | <tFALSE> { atr_f = new Attributes(false);generador_codigo.apila_valor(atr_f);}
  }catch(ParseException e) {
 	errorSintactico(e);
+ }catch(NullPointerException e) {
+
  }finally{
     return atr_f;
  }
@@ -1007,7 +1009,8 @@ Attributes funcion_o_vector(Token t) :
     }
  }catch(ParseException e) {
 	errorSintactico(e);
- }finally{
+ }catch(NullPointerException e) {}
+ finally{
   return atr;
  }
 }
@@ -1050,6 +1053,7 @@ Attributes lista_uno_o_mas_exps(Symbol simbolo_de_la_accion, Token t) :
   }
  }catch(ParseException e) {
 	errorSintactico(e);
- }finally{return atr; }
+ }catch(NullPointerException e) {}
+ finally{return atr; }
 }
 
